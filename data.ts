@@ -235,7 +235,7 @@ export const STAR_DATA: StarMapping[] = [
   },
   {
     id: 'tianyue',
-    name: 'Tian Yue',
+    name: '天钺',
     pinyin: 'Tian Yue',
     category: StarCategory.LUCKY,
     realm: LacanRealm.SYMBOLIC,
