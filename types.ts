@@ -11,16 +11,24 @@ export enum StarCategory {
   MISC = 'MISC'
 }
 
+export type Language = 'zh' | 'en';
+export type AnalysisStyle = 'Pictographic' | 'Semiotics' | 'Classic' | 'Lacanian';
+
+export interface LocalizedString {
+  zh: string;
+  en: string;
+}
+
 export interface StarMapping {
   id: string;
-  name: string;
+  name: LocalizedString;
   pinyin: string;
   realm: LacanRealm;
   category: StarCategory;
-  lacanConcept: string;
-  description: string;
-  traditionalMeaning: string;
-  philosophicalInsight: string;
+  lacanConcept: LocalizedString;
+  description: LocalizedString;
+  traditionalMeaning: LocalizedString;
+  philosophicalInsight: LocalizedString;
   color: string;
 }
 
@@ -29,4 +37,6 @@ export interface AnalysisState {
   selectedCategory: StarCategory | 'ALL';
   loading: boolean;
   aiInsight: string | null;
+  language: Language;
+  style: AnalysisStyle;
 }

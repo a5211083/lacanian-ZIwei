@@ -1,19 +1,20 @@
 
 import React, { useMemo } from 'react';
 import { STAR_DATA } from '../data';
-import { LacanRealm, StarMapping, StarCategory } from '../types';
+import { LacanRealm, StarMapping, StarCategory, Language } from '../types';
 
 interface VisualChartProps {
   onSelectStar: (star: StarMapping) => void;
   selectedId: string | null;
   filter: StarCategory | 'ALL';
+  lang: Language;
 }
 
-const VisualChart: React.FC<VisualChartProps> = ({ onSelectStar, selectedId, filter }) => {
+const VisualChart: React.FC<VisualChartProps> = ({ onSelectStar, selectedId, filter, lang }) => {
   const realms = {
-    [LacanRealm.REAL]: { x: 400, y: 150, color: '#ef4444', label: '实在界 (The Real)' },
-    [LacanRealm.SYMBOLIC]: { x: 200, y: 500, color: '#3b82f6', label: '象征界 (The Symbolic)' },
-    [LacanRealm.IMAGINARY]: { x: 600, y: 500, color: '#10b981', label: '想象界 (The Imaginary)' },
+    [LacanRealm.REAL]: { x: 400, y: 150, color: '#ef4444', label: lang === 'zh' ? '实在界 (The Real)' : 'The Real' },
+    [LacanRealm.SYMBOLIC]: { x: 200, y: 500, color: '#3b82f6', label: lang === 'zh' ? '象征界 (The Symbolic)' : 'The Symbolic' },
+    [LacanRealm.IMAGINARY]: { x: 600, y: 500, color: '#10b981', label: lang === 'zh' ? '想象界 (The Imaginary)' : 'The Imaginary' },
   };
 
   const positions = useMemo(() => {
@@ -23,9 +24,7 @@ const VisualChart: React.FC<VisualChartProps> = ({ onSelectStar, selectedId, fil
       const count = realmCounts[star.realm] || 0;
       realmCounts[star.realm] = count + 1;
       
-      // Calculate layout: Rings for different categories if we wanted, 
-      // but let's use a spiral/grid per realm for clarity.
-      const angle = (count * 137.5 * Math.PI) / 180; // Golden angle for even distribution
+      const angle = (count * 137.5 * Math.PI) / 180;
       const radius = 50 + (count * 12);
       
       return {
@@ -43,10 +42,8 @@ const VisualChart: React.FC<VisualChartProps> = ({ onSelectStar, selectedId, fil
   return (
     <div className="relative w-full aspect-square md:aspect-video bg-slate-900/50 rounded-xl overflow-hidden border border-slate-800">
       <svg viewBox="0 0 800 650" className="w-full h-full">
-        {/* Connection Lines */}
         <path d="M 400 150 L 200 500 L 600 500 Z" fill="none" stroke="#334155" strokeWidth="2" strokeDasharray="5,5" />
         
-        {/* Realm Backgrounds */}
         {Object.entries(realms).map(([key, r]) => (
           <g key={key}>
             <circle cx={r.x} cy={r.y} r="180" fill={r.color} fillOpacity="0.02" stroke={r.color} strokeOpacity="0.05" />
@@ -56,7 +53,6 @@ const VisualChart: React.FC<VisualChartProps> = ({ onSelectStar, selectedId, fil
           </g>
         ))}
 
-        {/* Hidden Stars (Ghostly) */}
         {positions.map((star) => (
           filter !== 'ALL' && star.category !== filter && (
             <circle 
@@ -67,7 +63,6 @@ const VisualChart: React.FC<VisualChartProps> = ({ onSelectStar, selectedId, fil
           )
         ))}
 
-        {/* Active Stars */}
         {visibleStars.map((star) => (
           <g 
             key={star.id} 
@@ -90,14 +85,15 @@ const VisualChart: React.FC<VisualChartProps> = ({ onSelectStar, selectedId, fil
               className="text-[10px] font-bold"
               style={{ textShadow: '0 0 4px black' }}
             >
-              {star.name}
+              {star.name[lang]}
             </text>
           </g>
         ))}
       </svg>
       <div className="absolute bottom-4 left-4 text-[10px] text-slate-500 max-w-[200px] bg-black/40 p-2 rounded backdrop-blur">
-        RSI 建模：实在界(红)、象征界(蓝)、想象界(绿)。
-        星曜位置基于其所属界域的能指强度排布。
+        {lang === 'zh' 
+          ? 'RSI 建模：实在界(红)、象征界(蓝)、想象界(绿)。' 
+          : 'RSI Modeling: Real (Red), Symbolic (Blue), Imaginary (Green).'}
       </div>
     </div>
   );
