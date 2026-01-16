@@ -7,12 +7,14 @@ export enum LacanRealm {
 
 export enum StarCategory {
   MAIN = 'MAIN',
-  ASSISTANT = 'ASSISTANT',
-  MISC = 'MISC'
+  ASSISTANT = 'ASSISTANT', // 六吉六煞
+  MISC = 'MISC',           // 杂曜
+  PALACE = 'PALACE',
+  TRANSFORMATION = 'TRANSFORMATION'
 }
 
 export type Language = 'zh' | 'en';
-export type AnalysisStyle = 'Pictographic' | 'Semiotics' | 'Classic' | 'Lacanian';
+export type AnalysisStyle = 'Lacanian' | 'Classic' | 'Semiotics' | 'Pictographic';
 
 export interface LocalizedString {
   zh: string;
@@ -28,22 +30,26 @@ export interface StarMapping {
   lacanConcept: LocalizedString;
   description: LocalizedString;
   traditionalMeaning: LocalizedString;
-  philosophicalInsight: LocalizedString;
   color: string;
+  canTransform?: {
+    lu?: boolean;
+    quan?: boolean;
+    ke?: boolean;
+    ji?: boolean;
+  };
 }
 
 export interface Palace {
   id: string;
   name: LocalizedString;
-  lacanMapping: LocalizedString;
-  description: LocalizedString;
+  concept: LocalizedString;
 }
 
 export interface Transformation {
   id: string;
   name: LocalizedString;
-  lacanMapping: LocalizedString;
   color: string;
+  concept: LocalizedString;
 }
 
 export interface ChartPalace {
@@ -51,20 +57,14 @@ export interface ChartPalace {
   palaceName: LocalizedString;
   branch: string;
   stars: StarMapping[];
-  transformations: string[];
 }
 
 export interface AnalysisState {
-  selectedStarId: string | null;
-  selectedCategory: StarCategory | 'ALL';
+  selectedStar: StarMapping | null;
+  selectedPalace: Palace | null;
+  selectedTrans: Transformation | null;
+  style: AnalysisStyle;
   loading: boolean;
   aiInsight: string | null;
   language: Language;
-  style: AnalysisStyle;
-  selectedPalaceId: string | null;
-  selectedTransformationId: string | null;
-  birthDate: string;
-  birthHour: number;
-  timezone: string;
-  generatedChart: ChartPalace[] | null;
 }

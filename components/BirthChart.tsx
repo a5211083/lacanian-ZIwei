@@ -1,106 +1,77 @@
 
 import React from 'react';
-import { ChartPalace, Language, StarMapping } from '../types';
+import { ChartPalace, StarMapping, Language, LacanRealm } from '../types';
 
 interface BirthChartProps {
   chart: ChartPalace[];
   lang: Language;
-  onSelectStar: (star: StarMapping) => void;
+  onSelectStar: (star: StarMapping, palaceId: string) => void;
   selectedStarId: string | null;
 }
 
 const BirthChart: React.FC<BirthChartProps> = ({ chart, lang, onSelectStar, selectedStarId }) => {
-  const layout = [
-    5, 6, 7, 8,
-    4, -1, -1, 9,
-    3, -1, -1, 10,
-    2, 1, 0, 11
-  ];
+  const layout = [5, 6, 7, 8, 4, -1, -1, 9, 3, -1, -1, 10, 2, 1, 0, 11];
 
-  const t = (zh: string, en: string) => (lang === 'zh' ? zh : en);
-  const meta = (chart as any).meta || {};
-  const bazi = meta.bazi || {};
+  const getRealmTag = (realm: LacanRealm) => {
+    switch(realm) {
+      case LacanRealm.REAL: return 'R';
+      case LacanRealm.SYMBOLIC: return 'S';
+      case LacanRealm.IMAGINARY: return 'I';
+    }
+  };
+
+  const getStarClasses = (star: StarMapping, isSelected: boolean) => {
+    let base = "flex items-center justify-between w-full text-left text-[10px] px-1.5 py-1 rounded-lg mb-0.5 transition-all truncate border ";
+    if (isSelected) return base + "bg-white text-slate-950 font-black border-white shadow-lg z-10 scale-105";
+    
+    switch(star.realm) {
+      case LacanRealm.REAL: return base + "text-rose-400 bg-rose-500/5 border-rose-500/10 hover:border-rose-500/40";
+      case LacanRealm.SYMBOLIC: return base + "text-indigo-400 bg-indigo-500/5 border-indigo-500/10 hover:border-indigo-500/40";
+      case LacanRealm.IMAGINARY: return base + "text-emerald-400 bg-emerald-500/5 border-emerald-500/10 hover:border-emerald-500/40";
+      default: return base + "text-slate-500 bg-slate-800/10 border-slate-800/20";
+    }
+  };
 
   return (
-    <div className="grid grid-cols-4 grid-rows-4 gap-1 aspect-square w-full max-w-4xl mx-auto bg-slate-900 border-2 border-slate-800 p-1 rounded-lg">
+    <div className="grid grid-cols-4 grid-rows-4 gap-1 w-full aspect-square bg-slate-950 border border-slate-800 p-1.5 rounded-[2rem] shadow-2xl print:border-slate-300 print:bg-white print:rounded-none">
       {layout.map((cellIdx, i) => {
         if (cellIdx === -1) {
-          if (i === 5) {
-            return (
-              <div key="center" className="col-span-2 row-span-2 flex flex-col items-center justify-center text-center p-2 bg-slate-950/80 rounded border border-slate-800/50 shadow-inner">
-                <div className="flex gap-4 mb-3">
-                  {[
-                    { label: t('年', 'Year'), val: bazi.year },
-                    { label: t('月', 'Month'), val: bazi.month },
-                    { label: t('日', 'Day'), val: bazi.day },
-                    { label: t('时', 'Hour'), val: bazi.hour },
-                  ].map((p, idx) => (
-                    <div key={idx} className="flex flex-col items-center">
-                      <span className="text-[8px] text-slate-500 font-bold mb-1">{p.label}</span>
-                      <div className="text-sm font-black text-indigo-400 leading-none tracking-tighter w-6 flex flex-col">
-                        <span>{p.val?.[0]}</span>
-                        <span>{p.val?.[1]}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="text-[10px] text-indigo-200 font-bold mb-3 tracking-widest border-b border-indigo-500/20 pb-1">
-                  {meta.lunar}
-                </div>
-                <div className="px-3 py-1 bg-indigo-600/20 rounded-full text-[10px] text-indigo-300 font-bold border border-indigo-500/30 mb-2">
-                  {meta.phase} · {t('拉康拓扑', 'Lacanian Topology')}
-                </div>
-                <div className="text-[9px] text-slate-600 italic px-2 leading-tight">
-                   {t('“真理作为缺失在言说中显现”', '"Truth emerges as a lack in speech"')}
-                </div>
-              </div>
-            );
-          }
+          if (i === 5) return <div key="center" className="col-span-2 row-span-2 flex flex-col items-center justify-center p-8 bg-slate-900/20 border border-slate-800/30 rounded-[2rem] relative overflow-hidden">
+             <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
+               <svg viewBox="0 0 100 100" className="w-full h-full"><circle cx="50" cy="50" r="40" fill="none" stroke="white" strokeWidth="0.5" /></svg>
+             </div>
+             <span className="text-slate-700 font-black text-2xl uppercase tracking-[0.4em] opacity-30 italic">Topology</span>
+             <span className="text-slate-800 text-[8px] font-bold mt-2 opacity-20">R · S · I Mapping Engine</span>
+          </div>;
           return null;
         }
 
         const palace = chart[cellIdx];
-        const isBody = palace.transformations.includes('身宫');
+        if (!palace) return <div key={i} className="bg-slate-900/20 rounded-xl" />;
 
         return (
-          <div 
-            key={cellIdx} 
-            className="border border-slate-800 bg-slate-950/40 p-2 flex flex-col justify-between overflow-hidden hover:bg-slate-800/30 transition-all duration-300 group"
-          >
-            <div className="flex justify-between items-start mb-1 border-b border-slate-800/50 pb-1">
-              <span className="text-[11px] font-bold text-indigo-300 group-hover:text-white transition-colors">
-                {palace.palaceName[lang]}
-                {isBody && <span className="ml-1 text-rose-500 text-[8px] font-black">{t('(身)', '(B)')}</span>}
-              </span>
-              <span className="text-[8px] text-slate-700 font-mono tracking-tighter">{palace.branch}</span>
+          <div key={cellIdx} className="border border-slate-800/50 bg-slate-900/30 p-2 flex flex-col justify-between hover:bg-slate-900/60 transition-all rounded-2xl print:border-slate-200">
+            <div className="flex justify-between items-center border-b border-slate-800/50 pb-1.5 mb-2">
+              <span className="text-[11px] font-black text-indigo-400 uppercase tracking-wider">{palace.palaceName[lang]}</span>
+              <span className="text-[9px] text-slate-700 font-black opacity-60">{palace.branch}</span>
             </div>
             
-            <div className="flex-1 flex flex-col gap-1 overflow-y-auto custom-scrollbar pt-1">
-              {palace.stars.map((star, sIdx) => {
-                const trans = (star as any).currentTransformation;
-                return (
-                  <button
-                    key={`${star.id}-${sIdx}`}
-                    onClick={() => onSelectStar(star)}
-                    className={`flex items-center justify-between text-[10px] px-1 py-0.5 rounded transition-all truncate border border-transparent ${
-                      selectedStarId === star.id 
-                      ? 'bg-indigo-600/30 border-indigo-500 text-white font-bold' 
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
-                    }`}
-                    style={{ color: selectedStarId === star.id ? '' : star.color }}
-                  >
-                    <span>{star.name[lang]}</span>
-                    {trans && (
-                      <span 
-                        className="ml-1 text-[7px] font-black px-0.5 rounded leading-none"
-                        style={{ backgroundColor: trans.color, color: '#000' }}
-                      >
-                        {trans.name[lang].slice(-1)}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+            <div className="flex-1 space-y-0.5 overflow-y-auto custom-scrollbar max-h-[100px] md:max-h-none">
+              {palace.stars.map((star) => (
+                <button
+                  key={star.id}
+                  onClick={() => onSelectStar(star, palace.id)}
+                  className={getStarClasses(star, selectedStarId === star.id)}
+                >
+                  <span className="truncate">{star.name[lang]}</span>
+                  <span className={`ml-1 text-[7px] px-1 rounded font-black border ${
+                    star.realm === LacanRealm.REAL ? 'text-rose-500 border-rose-500/30' :
+                    star.realm === LacanRealm.SYMBOLIC ? 'text-indigo-400 border-indigo-400/30' : 'text-emerald-500 border-emerald-500/30'
+                  } ${selectedStarId === star.id ? 'bg-slate-950 text-white border-transparent' : ''}`}>
+                    {getRealmTag(star.realm)}
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
         );

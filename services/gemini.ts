@@ -4,106 +4,41 @@ import { StarMapping, Language, AnalysisStyle, Palace, Transformation } from "..
 
 export async function getDetailedAnalysis(
   star: StarMapping, 
+  palace: Palace | null,
+  trans: Transformation | null,
   lang: Language = 'zh', 
-  style: AnalysisStyle = 'Semiotics'
-): Promise<string> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  
-  const contentName = star.name[lang];
-  const contentRealm = star.realm;
-  const contentConcept = star.lacanConcept[lang];
-  const targetLang = lang === 'zh' ? 'Chinese' : 'English';
-
-  let styleInstruction = "";
-  switch (style) {
-    case 'Pictographic':
-      styleInstruction = lang === 'zh' 
-        ? "着重于汉字的象形本源、甲骨文/金文演变及其与心理结构的原始关联。" 
-        : "Focus on the pictographic origins of the Chinese characters, their evolution from Oracle Bone script, and their primal connection to psychological structures.";
-      break;
-    case 'Semiotics':
-      styleInstruction = lang === 'zh' 
-        ? "使用索绪尔符号学（能指与所指）与结构主义的角度进行拆解。" 
-        : "Use the perspective of Saussurean semiotics (signifier and signified) and structuralism.";
-      break;
-    case 'Classic':
-      styleInstruction = lang === 'zh' 
-        ? "引用《紫微斗数全书》原文精髓，结合古籍风格进行命理与心性的交织解析。" 
-        : "Quote the essence of 'Zi Wei Dou Shu Quan Shu' original texts, combining classical style with numerological and mental analysis.";
-      break;
-    case 'Lacanian':
-      styleInstruction = lang === 'zh' 
-        ? "深钻拉康精神分析的核心：不仅限于镜像阶段，更要触及实在界之恐怖、欲望之辩证法、能指的大它者地位等硬核概念。" 
-        : "Deep dive into the core of Lacanian psychoanalysis: beyond the mirror stage, touching on hard concepts like the horror of the Real, the dialectic of desire, and the position of the Big Other.";
-      break;
-  }
-
-  const systemInstruction = `
-    You are a world-class Lacanian psychoanalyst and Zi Wei Dou Shu expert.
-    Current Analysis Style: ${styleInstruction}
-    Respond exclusively in ${targetLang}.
-  `;
-
-  const prompt = `
-    Analyze the star "${contentName}" (${star.pinyin}).
-    Lacanian Realm: "${contentRealm}".
-    Lacanian Concept: "${contentConcept}".
-    
-    Structure your response (around 150 words):
-    1. A deep synthesis of the star based on the chosen style (${style}).
-    2. Its role in the subject's desire and psychic structure.
-    3. A philosophical advice reflecting this specific interpretation.
-    
-    Maintain a profound, scholarly, and insightful tone.
-  `;
-
-  try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: prompt,
-      config: {
-        systemInstruction: systemInstruction,
-      }
-    });
-    return response.text || (lang === 'zh' ? "无法生成深度分析。" : "Unable to generate analysis.");
-  } catch (error) {
-    console.error("AI Analysis Error:", error);
-    return lang === 'zh' ? "解析过程中出现波动，请重试。" : "Analysis fluctuated. Please try again.";
-  }
-}
-
-export async function getPalaceStarAnalysis(
-  star: StarMapping,
-  palace: Palace,
-  transformation: Transformation | null,
-  lang: Language = 'zh'
+  style: AnalysisStyle = 'Lacanian'
 ): Promise<string> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const targetLang = lang === 'zh' ? 'Chinese' : 'English';
 
-  const prompt = `
-    Context:
-    Star: ${star.name[lang]} (${star.pinyin}) - Concept: ${star.lacanConcept[lang]}
-    Palace: ${palace.name[lang]} - Lacanian Mapping: ${palace.lacanMapping[lang]}
-    Transformation (Optional): ${transformation ? transformation.name[lang] + " (" + transformation.lacanMapping[lang] + ")" : "None"}
+  let styleDesc = "";
+  if (style === 'Lacanian') styleDesc = "使用拉康精神分析视角，重点关注实在、想象与象征界的博弈。";
+  if (style === 'Classic') styleDesc = "采用紫微斗数经典古籍风格，结合命理宿命论。";
+  if (style === 'Semiotics') styleDesc = "使用结构主义符号学，拆解能指与所指。";
+  if (style === 'Pictographic') styleDesc = "从汉字构件的象形演变与心理原型出发进行解读。";
 
-    Task:
-    Provide a Lacanian interpretation (100 words) of this combination. 
-    Explain how this star operates within this specific psychic area (Palace) and how the Transformation (if any) alters the subject's jouissance or desire.
-    
-    Respond in ${targetLang}.
+  const prompt = `
+    作为资深专家，请深度解析以下星曜组合：
+    - 星曜：${star.name[lang]} (拉康概念: ${star.lacanConcept[lang]})
+    - 宫位：${palace ? palace.name[lang] + " (" + palace.concept[lang] + ")" : "独立分析"}
+    - 四化：${trans ? trans.name[lang] + " (" + trans.concept[lang] + ")" : "无"}
+    - 风格：${styleDesc}
+
+    要求：
+    1. 生成约200字的深度分析报告。
+    2. 解释该组合如何影响主体的欲望结构和心理地图。
+    3. 给出一句深刻的哲学启示。
+    请使用${targetLang}回答。
   `;
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-3-pro-preview',
       contents: prompt,
-      config: {
-        systemInstruction: "You are a Lacanian Psychoanalyst applying your framework to Zi Wei Dou Shu systems."
-      }
     });
-    return response.text || "";
+    return response.text || "无法生成解析。";
   } catch (error) {
-    return lang === 'zh' ? "宫位解析失败。" : "Palace analysis failed.";
+    return "解析发生错误，请稍后重试。";
   }
 }
