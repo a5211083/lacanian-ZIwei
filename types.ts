@@ -7,9 +7,7 @@ export enum LacanRealm {
 
 export enum StarCategory {
   MAIN = 'MAIN',
-  LUCKY = 'LUCKY',
-  MALEFIC = 'MALEFIC',
-  MISC = 'MISC'
+  ASSISTANT = 'ASSISTANT'
 }
 
 export interface StarMapping {

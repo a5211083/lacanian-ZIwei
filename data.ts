@@ -2,7 +2,7 @@
 import { LacanRealm, StarMapping, StarCategory } from './types';
 
 export const STAR_DATA: StarMapping[] = [
-  // --- 14 Main Stars ---
+  // --- 14 Main Stars (14主星) ---
   {
     id: 'ziwei',
     name: '紫微',
@@ -172,12 +172,12 @@ export const STAR_DATA: StarMapping[] = [
     color: '#1e3a8a'
   },
 
-  // --- Six Lucky Stars ---
+  // --- 14 Assistant Stars (14辅星: 6 Lucky + 6 Malefic + 2 Misc) ---
   {
     id: 'zuofu',
     name: '左辅',
     pinyin: 'Zuo Fu',
-    category: StarCategory.LUCKY,
+    category: StarCategory.ASSISTANT,
     realm: LacanRealm.IMAGINARY,
     lacanConcept: '镜像认同 (Specular Identification)',
     description: '来自同伴的支持，强化自我的虚幻统一感。',
@@ -189,7 +189,7 @@ export const STAR_DATA: StarMapping[] = [
     id: 'youbi',
     name: '右弼',
     pinyin: 'You Bi',
-    category: StarCategory.LUCKY,
+    category: StarCategory.ASSISTANT,
     realm: LacanRealm.IMAGINARY,
     lacanConcept: '自我理想的投射',
     description: '对自我能力延伸的幻想性肯定。',
@@ -201,7 +201,7 @@ export const STAR_DATA: StarMapping[] = [
     id: 'wenchang',
     name: '文昌',
     pinyin: 'Wen Chang',
-    category: StarCategory.LUCKY,
+    category: StarCategory.ASSISTANT,
     realm: LacanRealm.SYMBOLIC,
     lacanConcept: '主人能指 (S1)',
     description: '白纸黑字的律法，是象征秩序中被赋予权威的文字。',
@@ -213,7 +213,7 @@ export const STAR_DATA: StarMapping[] = [
     id: 'wenqu',
     name: '文曲',
     pinyin: 'Wen Qu',
-    category: StarCategory.LUCKY,
+    category: StarCategory.ASSISTANT,
     realm: LacanRealm.SYMBOLIC,
     lacanConcept: '知识的享乐 (S2)',
     description: '感性的流转，是象征链条中关于艺术与感性的知识。',
@@ -225,7 +225,7 @@ export const STAR_DATA: StarMapping[] = [
     id: 'tiankui',
     name: '天魁',
     pinyin: 'Tian Kui',
-    category: StarCategory.LUCKY,
+    category: StarCategory.ASSISTANT,
     realm: LacanRealm.SYMBOLIC,
     lacanConcept: '理想它者 (Ideal Other)',
     description: '象征秩序中仁慈的引导力量。',
@@ -237,7 +237,7 @@ export const STAR_DATA: StarMapping[] = [
     id: 'tianyue',
     name: '天钺',
     pinyin: 'Tian Yue',
-    category: StarCategory.LUCKY,
+    category: StarCategory.ASSISTANT,
     realm: LacanRealm.SYMBOLIC,
     lacanConcept: '象征界的机遇',
     description: '在象征秩序的缝隙中闪现的机会。',
@@ -245,13 +245,11 @@ export const STAR_DATA: StarMapping[] = [
     philosophicalInsight: '天钺是象征界对主体的偶尔奖赏，缓解了结构的压抑。',
     color: '#f472b6'
   },
-
-  // --- Six Malefic Stars ---
   {
     id: 'qingyang',
     name: '擎羊',
     pinyin: 'Qing Yang',
-    category: StarCategory.MALEFIC,
+    category: StarCategory.ASSISTANT,
     realm: LacanRealm.REAL,
     lacanConcept: '阉割之刃 (Castration)',
     description: '粗暴的分离与切断，是进入象征界必须付出的创伤性代价。',
@@ -263,7 +261,7 @@ export const STAR_DATA: StarMapping[] = [
     id: 'tuoluo',
     name: '陀罗',
     pinyin: 'Tuo Luo',
-    category: StarCategory.MALEFIC,
+    category: StarCategory.ASSISTANT,
     realm: LacanRealm.REAL,
     lacanConcept: '症状的螺旋 (The Symptom Loop)',
     description: '主体在创伤周围不断的、强迫性的重复循环。',
@@ -275,7 +273,7 @@ export const STAR_DATA: StarMapping[] = [
     id: 'huoxing',
     name: '火星',
     pinyin: 'Huo Xing',
-    category: StarCategory.MALEFIC,
+    category: StarCategory.ASSISTANT,
     realm: LacanRealm.REAL,
     lacanConcept: '享乐的爆发 (Eruption of Jouissance)',
     description: '不可控的情绪与破坏力，是实在界最原始的能量喷发。',
@@ -287,7 +285,7 @@ export const STAR_DATA: StarMapping[] = [
     id: 'lingxing',
     name: '铃星',
     pinyin: 'Ling Xing',
-    category: StarCategory.MALEFIC,
+    category: StarCategory.ASSISTANT,
     realm: LacanRealm.REAL,
     lacanConcept: '超我的回响 (Superego Echo)',
     description: '内在的、挥之不去的、隐秘的自我惩罚机制。',
@@ -299,7 +297,7 @@ export const STAR_DATA: StarMapping[] = [
     id: 'dikong',
     name: '地空',
     pinyin: 'Di Kong',
-    category: StarCategory.MALEFIC,
+    category: StarCategory.ASSISTANT,
     realm: LacanRealm.REAL,
     lacanConcept: '原初匮乏 (The Void)',
     description: '主体核心处的那个结构性黑洞。',
@@ -311,7 +309,7 @@ export const STAR_DATA: StarMapping[] = [
     id: 'dijie',
     name: '地劫',
     pinyin: 'Di Jie',
-    category: StarCategory.MALEFIC,
+    category: StarCategory.ASSISTANT,
     realm: LacanRealm.REAL,
     lacanConcept: '欲望的截断 (Interruption)',
     description: '对幻想屏幕的粗暴撕裂，暴露出实在界的荒凉。',
@@ -319,13 +317,11 @@ export const STAR_DATA: StarMapping[] = [
     philosophicalInsight: '地劫是主体在追逐幻想时，突然遭遇“它者并不存在”的瞬间。',
     color: '#451a03'
   },
-
-  // --- Key Misc Stars ---
   {
     id: 'lucun',
     name: '禄存',
     pinyin: 'Lu Cun',
-    category: StarCategory.MISC,
+    category: StarCategory.ASSISTANT,
     realm: LacanRealm.IMAGINARY,
     lacanConcept: '剩余享乐 (Plus-de-jouir)',
     description: '支撑主体活下去的那份盈余，是驱动机器运转的润滑油。',
@@ -337,7 +333,7 @@ export const STAR_DATA: StarMapping[] = [
     id: 'tianma',
     name: '天马',
     pinyin: 'Tian Ma',
-    category: StarCategory.MISC,
+    category: StarCategory.ASSISTANT,
     realm: LacanRealm.SYMBOLIC,
     lacanConcept: '转喻的运动 (Metonymic Flow)',
     description: '欲望从一个能指不断跳跃到另一个能指的无止境过程。',

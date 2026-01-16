@@ -33,9 +33,7 @@ const App: React.FC = () => {
   const categories = [
     { id: 'ALL', label: '全部' },
     { id: StarCategory.MAIN, label: '十四主星' },
-    { id: StarCategory.LUCKY, label: '六吉星' },
-    { id: StarCategory.MALEFIC, label: '六煞星' },
-    { id: StarCategory.MISC, label: '重要杂曜' },
+    { id: StarCategory.ASSISTANT, label: '14辅星' },
   ];
 
   return (
