@@ -23,6 +23,28 @@ export const TRANSFORMATION_DATA: Transformation[] = [
   { id: 'ji', name: { zh: '化忌', en: 'Ji' }, lacanMapping: { zh: '匮乏/阉割', en: 'Lack/Castration' }, color: '#ef4444' },
 ];
 
+// Mapping stars to which transformations they support (Lu, Quan, Ke, Ji)
+export const STAR_TRANSFORMATIONS: Record<string, string[]> = {
+  ziwei: ['quan', 'ke'],
+  tianji: ['lu', 'quan', 'ke', 'ji'],
+  taiyang: ['lu', 'quan', 'ji'],
+  wuqu: ['lu', 'quan', 'ke', 'ji'],
+  tiantong: ['lu', 'quan', 'ji'],
+  lianzhen: ['lu', 'ji'],
+  tianfu: [],
+  taiyin: ['lu', 'quan', 'ke', 'ji'],
+  tanlang: ['lu', 'quan', 'ji'],
+  jumen: ['lu', 'quan', 'ji'],
+  tianxiang: [],
+  tianliang: ['lu', 'quan', 'ke'],
+  qisha: [],
+  pojun: ['lu', 'quan'],
+  wenchang: ['ji'],
+  wenqu: ['ke', 'ji'],
+  zuofu: ['ke'],
+  youbi: ['ke']
+};
+
 export const STAR_DATA: StarMapping[] = [
   // --- 14 Main Stars ---
   {

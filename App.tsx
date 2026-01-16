@@ -1,6 +1,6 @@
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { STAR_DATA, PALACE_DATA, TRANSFORMATION_DATA } from './data';
+import { STAR_DATA, PALACE_DATA, TRANSFORMATION_DATA, STAR_TRANSFORMATIONS } from './data';
 import { StarMapping, AnalysisState, StarCategory, Language, AnalysisStyle, Palace, Transformation } from './types';
 import VisualChart from './components/VisualChart';
 import { getDetailedAnalysis, getPalaceStarAnalysis } from './services/gemini';
@@ -25,6 +25,16 @@ const App: React.FC = () => {
   const selectedStar = STAR_DATA.find(s => s.id === state.selectedStarId);
   const selectedPalace = PALACE_DATA.find(p => p.id === state.selectedPalaceId);
   const selectedTransformation = TRANSFORMATION_DATA.find(tf => tf.id === state.selectedTransformationId);
+
+  // Check if current transformation is valid for current star
+  useEffect(() => {
+    if (state.selectedStarId && state.selectedTransformationId) {
+      const allowed = STAR_TRANSFORMATIONS[state.selectedStarId] || [];
+      if (!allowed.includes(state.selectedTransformationId)) {
+        setState(prev => ({ ...prev, selectedTransformationId: null }));
+      }
+    }
+  }, [state.selectedStarId]);
 
   const filteredStars = useMemo(() => {
     return STAR_DATA.filter(s => state.selectedCategory === 'ALL' || s.category === state.selectedCategory);
@@ -320,23 +330,47 @@ const App: React.FC = () => {
           {/* Transformation & Star Context */}
           <div className="lg:col-span-4 flex flex-col gap-6">
             <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl">
-              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">{t('选择四化', 'Select Transformation')}</h3>
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">
+                {t('选择四化', 'Select Transformation')}
+                {selectedStar && (
+                  <span className="ml-2 text-[8px] font-normal text-slate-500 lowercase">
+                    ({t('基于', 'based on')} {selectedStar.name[state.language]})
+                  </span>
+                )}
+              </h3>
               <div className="grid grid-cols-4 gap-2">
-                {TRANSFORMATION_DATA.map(tf => (
-                  <button
-                    key={tf.id}
-                    onClick={() => setState(prev => ({ ...prev, selectedTransformationId: state.selectedTransformationId === tf.id ? null : tf.id }))}
-                    className={`py-3 rounded-lg border text-xs font-bold transition-all ${
-                      state.selectedTransformationId === tf.id 
-                      ? 'shadow-lg border-opacity-100' 
-                      : 'bg-slate-950 border-slate-800 text-slate-600 opacity-50'
-                    }`}
-                    style={{ borderColor: tf.color, backgroundColor: state.selectedTransformationId === tf.id ? `${tf.color}22` : '', color: state.selectedTransformationId === tf.id ? tf.color : '' }}
-                  >
-                    {tf.name[state.language]}
-                  </button>
-                ))}
+                {TRANSFORMATION_DATA.map(tf => {
+                  /* Corrected use of state.selectedStarId */
+                  const isAllowed = state.selectedStarId ? (STAR_TRANSFORMATIONS[state.selectedStarId] || []).includes(tf.id) : true;
+                  return (
+                    <button
+                      key={tf.id}
+                      disabled={!isAllowed}
+                      onClick={() => setState(prev => ({ ...prev, selectedTransformationId: state.selectedTransformationId === tf.id ? null : tf.id }))}
+                      className={`py-3 rounded-lg border text-xs font-bold transition-all ${
+                        state.selectedTransformationId === tf.id 
+                        ? 'shadow-lg border-opacity-100 ring-1 ring-offset-2 ring-offset-slate-900' 
+                        : isAllowed 
+                          ? 'bg-slate-950 border-slate-800 text-slate-500 hover:border-slate-600' 
+                          : 'bg-slate-950/20 border-slate-900 text-slate-800 cursor-not-allowed opacity-30 grayscale'
+                      }`}
+                      style={{ 
+                        borderColor: state.selectedTransformationId === tf.id ? tf.color : (isAllowed ? '' : '#1e293b'), 
+                        backgroundColor: state.selectedTransformationId === tf.id ? `${tf.color}22` : '', 
+                        color: state.selectedTransformationId === tf.id ? tf.color : '' 
+                        /* Removed invalid ringColor property as per standard CSS guidelines */
+                      }}
+                    >
+                      {tf.name[state.language]}
+                    </button>
+                  );
+                })}
               </div>
+              {!selectedStar && (
+                 <p className="text-[9px] text-slate-600 mt-4 italic text-center">
+                   {t('请先选择星曜以查看可用四化', 'Select a star first to view available transformations')}
+                 </p>
+              )}
             </div>
 
             <div className="flex-1 p-6 bg-indigo-950/20 border border-indigo-900/30 rounded-2xl flex flex-col gap-4">
