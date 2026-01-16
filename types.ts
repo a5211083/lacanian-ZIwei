@@ -46,6 +46,14 @@ export interface Transformation {
   color: string;
 }
 
+export interface ChartPalace {
+  id: string;
+  palaceName: LocalizedString;
+  branch: string;
+  stars: StarMapping[];
+  transformations: string[];
+}
+
 export interface AnalysisState {
   selectedStarId: string | null;
   selectedCategory: StarCategory | 'ALL';
@@ -55,4 +63,8 @@ export interface AnalysisState {
   style: AnalysisStyle;
   selectedPalaceId: string | null;
   selectedTransformationId: string | null;
+  birthDate: string;
+  birthHour: number;
+  timezone: string;
+  generatedChart: ChartPalace[] | null;
 }

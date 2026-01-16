@@ -90,7 +90,7 @@ const VisualChart: React.FC<VisualChartProps> = ({ onSelectStar, selectedId, fil
           </g>
         ))}
       </svg>
-      <div className="absolute bottom-4 left-4 text-[10px] text-slate-500 max-w-[200px] bg-black/40 p-2 rounded backdrop-blur">
+      <div className="absolute top-4 left-4 text-[8px] text-slate-500 max-w-[150px] bg-black/40 p-2 rounded backdrop-blur border border-slate-800/50">
         {lang === 'zh' 
           ? 'RSI 建模：实在界(红)、象征界(蓝)、想象界(绿)。' 
           : 'RSI Modeling: Real (Red), Symbolic (Blue), Imaginary (Green).'}

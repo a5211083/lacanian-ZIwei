@@ -3,7 +3,9 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { STAR_DATA, PALACE_DATA, TRANSFORMATION_DATA, STAR_TRANSFORMATIONS } from './data';
 import { StarMapping, AnalysisState, StarCategory, Language, AnalysisStyle, Palace, Transformation } from './types';
 import VisualChart from './components/VisualChart';
+import BirthChart from './components/BirthChart';
 import { getDetailedAnalysis, getPalaceStarAnalysis } from './services/gemini';
+import { generateZwdsChart } from './services/zwds_engine';
 
 const App: React.FC = () => {
   const [state, setState] = useState<AnalysisState>({
@@ -14,11 +16,16 @@ const App: React.FC = () => {
     language: 'zh',
     style: 'Lacanian',
     selectedPalaceId: 'life',
-    selectedTransformationId: null
+    selectedTransformationId: null,
+    birthDate: new Date().toISOString().split('T')[0],
+    birthHour: 1,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    generatedChart: null
   });
 
   const [palaceInsight, setPalaceInsight] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const t = (zh: string, en: string) => (state.language === 'zh' ? zh : en);
 
@@ -26,23 +33,8 @@ const App: React.FC = () => {
   const selectedPalace = PALACE_DATA.find(p => p.id === state.selectedPalaceId);
   const selectedTransformation = TRANSFORMATION_DATA.find(tf => tf.id === state.selectedTransformationId);
 
-  // Check if current transformation is valid for current star
-  useEffect(() => {
-    if (state.selectedStarId && state.selectedTransformationId) {
-      const allowed = STAR_TRANSFORMATIONS[state.selectedStarId] || [];
-      if (!allowed.includes(state.selectedTransformationId)) {
-        setState(prev => ({ ...prev, selectedTransformationId: null }));
-      }
-    }
-  }, [state.selectedStarId]);
-
-  const filteredStars = useMemo(() => {
-    return STAR_DATA.filter(s => state.selectedCategory === 'ALL' || s.category === state.selectedCategory);
-  }, [state.selectedCategory]);
-
   const handleSelectStar = useCallback(async (star: StarMapping) => {
     setState(prev => ({ ...prev, selectedStarId: star.id, loading: true, aiInsight: null }));
-    
     try {
       const insight = await getDetailedAnalysis(star, state.language, state.style);
       setState(prev => ({ ...prev, aiInsight: insight, loading: false }));
@@ -51,56 +43,39 @@ const App: React.FC = () => {
     }
   }, [state.language, state.style]);
 
-  useEffect(() => {
-    if (selectedStar) {
-      handleSelectStar(selectedStar);
+  const handleGenerateChart = () => {
+    setErrorMsg(null);
+    try {
+      const chart = generateZwdsChart(state.birthDate, state.birthHour, state.timezone);
+      setState(prev => ({ ...prev, generatedChart: chart }));
+      setTimeout(() => {
+        document.getElementById('birth-chart-section')?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    } catch (err) {
+      console.error("Chart generation error:", err);
+      setErrorMsg(t("排盘失败，请检查日期格式或更换浏览器尝试。", "Chart generation failed. Please check the date format or try a different browser."));
     }
-  }, [state.language, state.style]);
-
-  const triggerPalaceAnalysis = useCallback(async () => {
-    if (!selectedStar || !selectedPalace) return;
-    setPalaceInsight(null);
-    const insight = await getPalaceStarAnalysis(selectedStar, selectedPalace, selectedTransformation || null, state.language);
-    setPalaceInsight(insight);
-  }, [selectedStar, selectedPalace, selectedTransformation, state.language]);
-
-  const handleExportTXT = () => {
-    let content = `Lacanian ZiWei Explorer - ${t('星曜分析报告', 'Star Analysis Report')}\n`;
-    content += `================================================\n`;
-    content += `${t('导出日期：', 'Export Date: ')} ${new Date().toLocaleString()}\n`;
-    content += `================================================\n\n`;
-
-    STAR_DATA.forEach(star => {
-      content += `【${star.name[state.language]} (${star.pinyin})】\n`;
-      content += `------------------------------------------------\n`;
-      content += `${t('精神分析范畴：', 'Psychoanalytic Realm: ')} ${star.realm}\n`;
-      content += `${t('拉康核心概念：', 'Lacanian Concept: ')} ${star.lacanConcept[state.language]}\n`;
-      content += `${t('传统命理象义：', 'Traditional Meaning: ')} ${star.traditionalMeaning[state.language]}\n`;
-      content += `${t('拉康映射深度：', 'Lacanian Mapping: ')} ${star.description[state.language]}\n`;
-      content += `${t('哲学洞察建议：', 'Philosophical Insight: ')} ${star.philosophicalInsight[state.language]}\n`;
-      content += `\n`;
-    });
-
-    content += `================================================\n`;
-    content += t('“欲望并非是对某种事物的欲望，而是对匮乏的欲望。” —— 雅克·拉康', '"Desire is not the desire for an object, but the desire for a lack." —— Jacques Lacan') + `\n`;
-    content += `================================================\n`;
-
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `Lacanian_ZiWei_Report_${state.language}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
   };
 
-  const categories = [
-    { id: 'ALL', label: t('全部', 'All') },
-    { id: StarCategory.MAIN, label: t('十四主星', '14 Main Stars') },
-    { id: StarCategory.ASSISTANT, label: t('十四辅星', '14 Assistant') },
-    { id: StarCategory.MISC, label: t('杂曜', 'Misc') },
+  const hours = Array.from({ length: 12 }, (_, i) => ({
+    val: i + 1,
+    label: ['子 (23-01)', '丑 (01-03)', '寅 (03-05)', '卯 (05-07)', '辰 (07-09)', '巳 (09-11)', '午 (11-13)', '未 (13-15)', '申 (15-17)', '酉 (17-19)', '戌 (19-21)', '亥 (21-23)'][i]
+  }));
+
+  // Common timezones for easy selection
+  const commonTimezones = [
+    { label: '中国标准时间 (GMT+8)', value: 'Asia/Shanghai' },
+    { label: '台北标准时间 (GMT+8)', value: 'Asia/Taipei' },
+    { label: '香港标准时间 (GMT+8)', value: 'Asia/Hong_Kong' },
+    { label: '东京标准时间 (GMT+9)', value: 'Asia/Tokyo' },
+    { label: '伦敦/格林威治 (GMT+0)', value: 'Europe/London' },
+    { label: '纽约 (GMT-5)', value: 'America/New_York' },
+    { label: '洛杉矶 (GMT-8)', value: 'America/Los_Angeles' },
+    { label: '巴黎 (GMT+1)', value: 'Europe/Paris' },
+    { label: '首尔 (GMT+9)', value: 'Asia/Seoul' },
+    { label: '新加坡 (GMT+8)', value: 'Asia/Singapore' },
+    { label: '悉尼 (GMT+11)', value: 'Australia/Sydney' },
+    { label: 'UTC', value: 'UTC' }
   ];
 
   const stylesList: { id: AnalysisStyle; label: string; en: string }[] = [
@@ -110,66 +85,44 @@ const App: React.FC = () => {
     { id: 'Classic', label: '全书原文风格', en: 'Classic Text' },
   ];
 
+  const categories = [
+    { id: 'ALL', label: t('全部', 'All') },
+    { id: StarCategory.MAIN, label: t('十四主星', '14 Main Stars') },
+    { id: StarCategory.ASSISTANT, label: t('十四辅星', '14 Assistant') },
+    { id: StarCategory.MISC, label: t('杂曜', 'Misc') },
+  ];
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 p-4 md:p-8 selection:bg-purple-500/30 font-sans">
-      {/* Settings Panel */}
       <div className="fixed top-6 right-6 z-50">
         <button 
           onClick={() => setIsSettingsOpen(!isSettingsOpen)}
           className="p-3 bg-slate-900/80 backdrop-blur border border-slate-800 rounded-full hover:bg-slate-800 transition-all shadow-lg group"
-          title={t('设置', 'Settings')}
         >
           <svg className={`w-5 h-5 transition-transform duration-500 ${isSettingsOpen ? 'rotate-90 text-indigo-400' : 'text-slate-400 group-hover:text-white'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
         </button>
-
         {isSettingsOpen && (
           <div className="absolute top-14 right-0 w-64 bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">{t('偏好设置', 'Preferences')}</h4>
-            
             <div className="space-y-4">
               <div>
                 <label className="text-xs text-slate-400 block mb-2">{t('界面语言', 'UI Language')}</label>
                 <div className="flex bg-slate-950 p-1 rounded-lg border border-slate-800">
                   {(['zh', 'en'] as Language[]).map(l => (
-                    <button
-                      key={l}
-                      onClick={() => setState(p => ({ ...p, language: l }))}
-                      className={`flex-1 py-1.5 text-[10px] rounded-md transition-all ${state.language === l ? 'bg-slate-800 text-white shadow' : 'text-slate-500 hover:text-slate-300'}`}
-                    >
-                      {l === 'zh' ? '中文' : 'English'}
-                    </button>
+                    <button key={l} onClick={() => setState(p => ({ ...p, language: l }))} className={`flex-1 py-1.5 text-[10px] rounded-md transition-all ${state.language === l ? 'bg-slate-800 text-white shadow' : 'text-slate-500 hover:text-slate-300'}`}>{l === 'zh' ? '中文' : 'English'}</button>
                   ))}
                 </div>
               </div>
-
               <div>
                 <label className="text-xs text-slate-400 block mb-2">{t('诠释风格', 'Interpretation Style')}</label>
                 <div className="flex flex-col gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800">
                   {stylesList.map(s => (
-                    <button
-                      key={s.id}
-                      onClick={() => setState(p => ({ ...p, style: s.id }))}
-                      className={`w-full py-2 text-[10px] rounded-md transition-all border border-transparent text-left px-3 ${state.style === s.id ? 'bg-indigo-600/20 border-indigo-500 text-white shadow' : 'text-slate-500 hover:text-slate-300'}`}
-                    >
-                      {t(s.label, s.en)}
-                    </button>
+                    <button key={s.id} onClick={() => setState(p => ({ ...p, style: s.id }))} className={`w-full py-2 text-[10px] rounded-md transition-all border border-transparent text-left px-3 ${state.style === s.id ? 'bg-indigo-600/20 border-indigo-500 text-white shadow' : 'text-slate-500 hover:text-slate-300'}`}>{t(s.label, s.en)}</button>
                   ))}
                 </div>
-              </div>
-
-              <div className="pt-2 border-t border-slate-800">
-                <button
-                  onClick={handleExportTXT}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold rounded-lg transition-all shadow-lg shadow-indigo-500/20"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  {t('导出 TXT 全曜报告', 'Export TXT Report')}
-                </button>
               </div>
             </div>
           </div>
@@ -177,265 +130,102 @@ const App: React.FC = () => {
       </div>
 
       <header className="max-w-7xl mx-auto mb-12 text-center">
-        <h1 className="text-4xl md:text-6xl font-black bg-gradient-to-r from-indigo-400 via-purple-500 to-rose-400 bg-clip-text text-transparent mb-4">
-          Lacanian ZiWei Explorer
-        </h1>
-        <p className="text-slate-400 text-lg md:text-xl font-light tracking-[0.2em] uppercase">
-          {t('紫微斗数全曜的精神分析图谱', 'A Psychoanalytic Map of Zi Wei Dou Shu')}
-        </p>
-        
+        <h1 className="text-4xl md:text-6xl font-black bg-gradient-to-r from-indigo-400 via-purple-500 to-rose-400 bg-clip-text text-transparent mb-4">Lacanian ZiWei Explorer</h1>
+        <p className="text-slate-400 text-lg md:text-xl font-light tracking-[0.2em] uppercase">{t('紫微斗数全曜的精神分析图谱', 'A Psychoanalytic Map of Zi Wei Dou Shu')}</p>
         <nav className="mt-8 flex flex-wrap justify-center gap-2">
           {categories.map(cat => (
-            <button
-              key={cat.id}
-              onClick={() => setState(prev => ({ ...prev, selectedCategory: cat.id as any, selectedStarId: null }))}
-              className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${
-                state.selectedCategory === cat.id 
-                ? 'bg-white text-slate-950 border-white' 
-                : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-600'
-              }`}
-            >
-              {cat.label}
-            </button>
+            <button key={cat.id} onClick={() => setState(prev => ({ ...prev, selectedCategory: cat.id as any, selectedStarId: null }))} className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${state.selectedCategory === cat.id ? 'bg-white text-slate-950 border-white' : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-600'}`}>{cat.label}</button>
           ))}
         </nav>
       </header>
 
       <main className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
         <div className="lg:col-span-8 flex flex-col gap-6">
-          <VisualChart 
-            onSelectStar={handleSelectStar} 
-            selectedId={state.selectedStarId} 
-            filter={state.selectedCategory}
-            lang={state.language}
-          />
-          
-          <div className="flex flex-wrap gap-2 justify-center max-h-[200px] overflow-y-auto p-2 border border-slate-800/30 rounded-lg custom-scrollbar">
-            {filteredStars.map(star => (
-              <button
-                key={star.id}
-                onClick={() => handleSelectStar(star)}
-                className={`px-3 py-2 rounded text-[11px] font-medium transition-all border ${
-                  state.selectedStarId === star.id 
-                  ? 'bg-slate-800 border-white text-white shadow-lg shadow-white/5' 
-                  : 'bg-slate-900/50 border-slate-800 text-slate-500 hover:border-slate-600'
-                }`}
-              >
-                {star.name[state.language]}
-              </button>
-            ))}
-          </div>
+          <VisualChart onSelectStar={handleSelectStar} selectedId={state.selectedStarId} filter={state.selectedCategory} lang={state.language} />
         </div>
-
         <div className="lg:col-span-4">
           {selectedStar ? (
             <div className="bg-slate-900/80 backdrop-blur border border-slate-800 rounded-2xl p-6 h-full flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="border-b border-slate-800 pb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-baseline gap-2">
-                    <h2 className="text-4xl font-bold" style={{ color: selectedStar.color }}>{selectedStar.name[state.language]}</h2>
-                    <span className="text-xl text-slate-500 italic font-light">{selectedStar.pinyin}</span>
-                  </div>
+                <div className="flex items-baseline gap-2">
+                  <h2 className="text-4xl font-bold" style={{ color: selectedStar.color }}>{selectedStar.name[state.language]}</h2>
+                  <span className="text-xl text-slate-500 italic font-light">{selectedStar.pinyin}</span>
                 </div>
                 <div className="mt-4">
-                   <div className="px-3 py-1 rounded-lg text-xs font-bold tracking-tight bg-slate-950 border border-slate-800 inline-block" style={{ color: selectedStar.color }}>
-                    {selectedStar.realm} · {selectedStar.lacanConcept[state.language]}
-                  </div>
+                   <div className="px-3 py-1 rounded-lg text-xs font-bold tracking-tight bg-slate-950 border border-slate-800 inline-block" style={{ color: selectedStar.color }}>{selectedStar.realm} · {selectedStar.lacanConcept[state.language]}</div>
                 </div>
               </div>
-
-              <section className="space-y-4 overflow-y-auto pr-2 custom-scrollbar">
-                <div>
-                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">{t('传统象义', 'Traditional Meaning')}</h3>
-                  <p className="text-slate-300 text-sm leading-relaxed">{selectedStar.traditionalMeaning[state.language]}</p>
-                </div>
-                <div>
-                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">{t('拉康映射', 'Lacanian Mapping')}</h3>
-                  <p className="text-slate-200 text-sm leading-relaxed italic">"{selectedStar.description[state.language]}"</p>
-                </div>
-                <div>
-                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">{t('哲学洞察', 'Philosophical Insight')}</h3>
-                  <p className="text-slate-400 text-sm font-light leading-relaxed">{selectedStar.philosophicalInsight[state.language]}</p>
-                </div>
+              <section className="space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-1">
+                <div><h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">{t('传统象义', 'Traditional Meaning')}</h3><p className="text-slate-300 text-sm leading-relaxed">{selectedStar.traditionalMeaning[state.language]}</p></div>
+                <div><h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">{t('拉康映射', 'Lacanian Mapping')}</h3><p className="text-slate-200 text-sm leading-relaxed italic">"{selectedStar.description[state.language]}"</p></div>
+                <div><h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">{t('哲学洞察', 'Philosophical Insight')}</h3><p className="text-slate-400 text-sm font-light leading-relaxed">{selectedStar.philosophicalInsight[state.language]}</p></div>
               </section>
-
-              <section className="mt-auto bg-slate-950/80 rounded-xl p-5 border border-slate-800 shadow-inner">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-[10px] font-black text-indigo-400 uppercase flex items-center gap-2 tracking-tighter">
-                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></div>
-                    {t(stylesList.find(s => s.id === state.style)?.label || '', stylesList.find(s => s.id === state.style)?.en || '')} Analysis
-                  </h3>
-                </div>
-                {state.loading ? (
-                  <div className="space-y-3 animate-pulse">
-                    <div className="h-2.5 bg-slate-800 rounded w-full"></div>
-                    <div className="h-2.5 bg-slate-800 rounded w-5/6"></div>
-                    <div className="h-2.5 bg-slate-800 rounded w-4/6"></div>
-                  </div>
-                ) : (
-                  <div className="text-slate-300 text-xs leading-relaxed font-serif italic opacity-90 border-l-2 border-indigo-900/50 pl-3 whitespace-pre-line">
-                    {state.aiInsight || t("点击星曜，观测深层潜意识的能指运作。", "Click a star to observe the operation of the subconscious signifier.")}
-                  </div>
-                )}
+              <section className="bg-slate-950/80 rounded-xl p-5 border border-slate-800 shadow-inner">
+                {state.loading ? <div className="space-y-3 animate-pulse"><div className="h-2.5 bg-slate-800 rounded w-full"></div><div className="h-2.5 bg-slate-800 rounded w-5/6"></div></div> : <div className="text-slate-300 text-xs leading-relaxed font-serif italic opacity-90 border-l-2 border-indigo-900/50 pl-3 whitespace-pre-line">{state.aiInsight || t("点击星曜，观测深层潜意识的能指运作。", "Click a star to observe the operation of the subconscious signifier.")}</div>}
               </section>
             </div>
           ) : (
             <div className="bg-slate-900/20 border border-slate-800/40 border-dashed rounded-2xl p-8 h-full flex flex-col items-center justify-center text-center">
               <div className="w-20 h-20 border border-slate-800 rounded-full flex items-center justify-center mb-6 text-slate-700 text-2xl font-thin">Ø</div>
               <h2 className="text-xl font-light text-slate-500 tracking-widest">{t('主体之缺', 'Subjective Lack')}</h2>
-              <p className="text-slate-600 text-sm mt-4 max-w-[240px] leading-relaxed">
-                {t('在这里，星曜并非命运的决定者，而是欲望的能指。请选择一颗星曜。', 'Select a star to begin analysis.')}
-              </p>
+              <p className="text-slate-600 text-sm mt-4 max-w-[240px] leading-relaxed">{t('星曜并非命运，而是欲望的能指。请选择一颗星曜。', 'Select a star to begin analysis.')}</p>
             </div>
           )}
         </div>
       </main>
 
-      {/* Palace & Transformation Section */}
-      <section className="max-w-7xl mx-auto border-t border-slate-900 pt-12 pb-24">
-        <h2 className="text-2xl font-black text-white mb-8 flex items-center gap-4">
-          <span className="w-8 h-8 rounded bg-indigo-600 flex items-center justify-center text-sm">P</span>
-          {t('宫位与四化：欲望的拓扑学', 'Palaces & Transformations: Topology of Desire')}
-        </h2>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Palace Grid */}
-          <div className="lg:col-span-8">
-            <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
-              {PALACE_DATA.map(p => (
-                <button
-                  key={p.id}
-                  onClick={() => setState(prev => ({ ...prev, selectedPalaceId: p.id }))}
-                  className={`p-4 rounded-xl border text-left transition-all ${
-                    state.selectedPalaceId === p.id 
-                    ? 'bg-indigo-600/10 border-indigo-500 ring-1 ring-indigo-500 shadow-xl shadow-indigo-500/10' 
-                    : 'bg-slate-900/40 border-slate-800 hover:border-slate-700'
-                  }`}
-                >
-                  <div className="text-xs font-bold text-slate-400 mb-1">{p.name[state.language]}</div>
-                  <div className="text-[10px] text-indigo-400 font-mono tracking-tighter truncate">{p.lacanMapping[state.language]}</div>
-                </button>
-              ))}
-            </div>
-
-            <div className="mt-6 p-6 bg-slate-900/60 border border-slate-800 rounded-2xl">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-bold text-white uppercase tracking-widest">{selectedPalace?.name[state.language]} {t('详述', 'Detail')}</h3>
-                <span className="text-[10px] text-slate-500 font-mono">{selectedPalace?.id.toUpperCase()}</span>
-              </div>
-              <p className="text-slate-400 text-sm leading-relaxed">{selectedPalace?.description[state.language]}</p>
-            </div>
+      <section id="birth-chart-section" className="max-w-7xl mx-auto border-t border-slate-900 pt-12 pb-32">
+        <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-6">
+          <div>
+            <h2 className="text-2xl font-black text-white mb-2 flex items-center gap-4">
+              <span className="w-8 h-8 rounded bg-rose-600 flex items-center justify-center text-sm">M</span>{t('生成紫微斗数命盘', 'Generate Zi Wei Dou Shu Chart')}
+            </h2>
+            <p className="text-slate-500 text-xs italic">{t('备注：本网页生成的命盘仅供参考，实际分析请用专业排盘软件', 'Note: This chart is for reference only.')}</p>
           </div>
-
-          {/* Transformation & Star Context */}
-          <div className="lg:col-span-4 flex flex-col gap-6">
-            <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl">
-              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">
-                {t('选择四化', 'Select Transformation')}
-                {selectedStar && (
-                  <span className="ml-2 text-[8px] font-normal text-slate-500 lowercase">
-                    ({t('基于', 'based on')} {selectedStar.name[state.language]})
-                  </span>
-                )}
-              </h3>
-              <div className="grid grid-cols-4 gap-2">
-                {TRANSFORMATION_DATA.map(tf => {
-                  /* Corrected use of state.selectedStarId */
-                  const isAllowed = state.selectedStarId ? (STAR_TRANSFORMATIONS[state.selectedStarId] || []).includes(tf.id) : true;
-                  return (
-                    <button
-                      key={tf.id}
-                      disabled={!isAllowed}
-                      onClick={() => setState(prev => ({ ...prev, selectedTransformationId: state.selectedTransformationId === tf.id ? null : tf.id }))}
-                      className={`py-3 rounded-lg border text-xs font-bold transition-all ${
-                        state.selectedTransformationId === tf.id 
-                        ? 'shadow-lg border-opacity-100 ring-1 ring-offset-2 ring-offset-slate-900' 
-                        : isAllowed 
-                          ? 'bg-slate-950 border-slate-800 text-slate-500 hover:border-slate-600' 
-                          : 'bg-slate-950/20 border-slate-900 text-slate-800 cursor-not-allowed opacity-30 grayscale'
-                      }`}
-                      style={{ 
-                        borderColor: state.selectedTransformationId === tf.id ? tf.color : (isAllowed ? '' : '#1e293b'), 
-                        backgroundColor: state.selectedTransformationId === tf.id ? `${tf.color}22` : '', 
-                        color: state.selectedTransformationId === tf.id ? tf.color : '' 
-                        /* Removed invalid ringColor property as per standard CSS guidelines */
-                      }}
-                    >
-                      {tf.name[state.language]}
-                    </button>
-                  );
-                })}
-              </div>
-              {!selectedStar && (
-                 <p className="text-[9px] text-slate-600 mt-4 italic text-center">
-                   {t('请先选择星曜以查看可用四化', 'Select a star first to view available transformations')}
-                 </p>
-              )}
+          
+          <div className="flex flex-wrap items-center gap-4 bg-slate-900/80 p-4 rounded-2xl border border-slate-800 shadow-xl">
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] text-slate-500 font-bold uppercase">{t('出生日期', 'Birth Date')}</label>
+              <input type="date" value={state.birthDate} onChange={(e) => setState(prev => ({ ...prev, birthDate: e.target.value }))} className="bg-slate-950 border border-slate-800 text-xs p-2 rounded-lg text-white focus:outline-none focus:border-indigo-500" />
             </div>
-
-            <div className="flex-1 p-6 bg-indigo-950/20 border border-indigo-900/30 rounded-2xl flex flex-col gap-4">
-              <h3 className="text-xs font-bold text-indigo-400 uppercase tracking-widest">{t('综合动力解析', 'Integrated Dynamics')}</h3>
-              <div className="text-xs text-slate-400 italic">
-                {selectedStar ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-white font-bold">{selectedStar.name[state.language]}</span>
-                    <span>→</span>
-                    <span className="text-white">{selectedPalace?.name[state.language]}</span>
-                    {selectedTransformation && (
-                      <>
-                        <span>+</span>
-                        <span style={{ color: selectedTransformation.color }}>{selectedTransformation.name[state.language]}</span>
-                      </>
-                    )}
-                  </div>
-                ) : (
-                  t('请在上方的星图中选择一颗星曜', 'Please select a star from the map above')
-                )}
-              </div>
-              
-              <button
-                disabled={!selectedStar}
-                onClick={triggerPalaceAnalysis}
-                className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-600 text-white text-xs font-bold rounded-xl transition-all shadow-lg"
-              >
-                {t('生成宫位释义', 'Generate Palace Interpretation')}
-              </button>
-
-              <div className="mt-2 min-h-[100px] text-[11px] leading-relaxed text-slate-300 font-serif border-l border-indigo-500/30 pl-3">
-                {palaceInsight || t('分析模块就绪...', 'Analysis module ready...')}
-              </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] text-slate-500 font-bold uppercase">{t('出生时辰', 'Birth Hour')}</label>
+              <select value={state.birthHour} onChange={(e) => setState(prev => ({ ...prev, birthHour: parseInt(e.target.value) }))} className="bg-slate-950 border border-slate-800 text-xs p-2 rounded-lg text-white focus:outline-none focus:border-indigo-500">
+                {hours.map(h => <option key={h.val} value={h.val}>{h.label}</option>)}
+              </select>
             </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] text-slate-500 font-bold uppercase">{t('出生时区', 'Birth Timezone')}</label>
+              <select value={state.timezone} onChange={(e) => setState(prev => ({ ...prev, timezone: e.target.value }))} className="bg-slate-950 border border-slate-800 text-xs p-2 rounded-lg text-white focus:outline-none focus:border-indigo-500 max-w-[150px]">
+                {commonTimezones.map(tz => <option key={tz.value} value={tz.value}>{tz.label}</option>)}
+                {!commonTimezones.find(tz => tz.value === state.timezone) && (
+                  <option value={state.timezone}>{state.timezone}</option>
+                )}
+              </select>
+            </div>
+            <button onClick={handleGenerateChart} className="mt-4 md:mt-0 px-6 py-2.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-black rounded-xl transition-all shadow-lg shadow-rose-600/20">{t('排盘', 'Plot Chart')}</button>
           </div>
         </div>
+
+        {errorMsg && <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/50 rounded-xl text-rose-400 text-center text-xs">{errorMsg}</div>}
+
+        {state.generatedChart ? (
+          <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
+            <BirthChart chart={state.generatedChart} lang={state.language} onSelectStar={handleSelectStar} selectedStarId={state.selectedStarId} />
+          </div>
+        ) : (
+          <div className="h-64 border-2 border-dashed border-slate-900 rounded-3xl flex items-center justify-center text-slate-700">
+            <p className="text-sm font-light italic">{t('输入日期点击“排盘”，投射您的欲望轨迹。', 'Enter date and plot chart.')}</p>
+          </div>
+        )}
       </section>
 
       <footer className="max-w-7xl mx-auto mt-20 pb-12 pt-8 border-t border-slate-900/50 flex flex-col md:flex-row justify-between items-center gap-4 text-slate-600 text-[10px]">
-        <div className="flex gap-6">
-          <span>R: Real</span>
-          <span>S: Symbolic</span>
-          <span>I: Imaginary</span>
-        </div>
-        <div className="text-center">
-          <p>{t('“欲望并非是对某种事物的欲望，而是对匮乏的欲望。”', '"Desire is not the desire for an object, but the desire for a lack."')}</p>
-          <p className="mt-1 font-bold">Lacanian ZiWei Explorer &copy; 2024</p>
-        </div>
-        <div className="text-right">
-          {t('算力路由引擎：Gemini 3 Flash Hybrid', 'Computing Engine: Gemini 3 Flash Hybrid')}
-        </div>
+        <div className="flex gap-6"><span>R: Real</span><span>S: Symbolic</span><span>I: Imaginary</span></div>
+        <div className="text-center"><p className="mt-1 font-bold">Lacanian ZiWei Explorer &copy; 2024</p></div>
+        <div className="text-right">{t('算力路由引擎：Gemini 3 Flash Hybrid', 'Computing Engine: Gemini 3 Flash Hybrid')}</div>
       </footer>
-      
-      <style>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #334155;
-          border-radius: 10px;
-        }
-      `}</style>
+      <style>{`.custom-scrollbar::-webkit-scrollbar { width: 4px; } .custom-scrollbar::-webkit-scrollbar-track { background: transparent; } .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }`}</style>
     </div>
   );
 };
