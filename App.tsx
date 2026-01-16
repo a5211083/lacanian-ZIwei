@@ -33,7 +33,8 @@ const App: React.FC = () => {
   const categories = [
     { id: 'ALL', label: '全部' },
     { id: StarCategory.MAIN, label: '十四主星' },
-    { id: StarCategory.ASSISTANT, label: '14辅星' },
+    { id: StarCategory.ASSISTANT, label: '十四辅星' },
+    { id: StarCategory.MISC, label: '杂曜' },
   ];
 
   return (
@@ -72,7 +73,7 @@ const App: React.FC = () => {
             filter={state.selectedCategory}
           />
           
-          <div className="flex flex-wrap gap-2 justify-center">
+          <div className="flex flex-wrap gap-2 justify-center max-h-[200px] overflow-y-auto p-2 border border-slate-800/30 rounded-lg custom-scrollbar">
             {filteredStars.map(star => (
               <button
                 key={star.id}

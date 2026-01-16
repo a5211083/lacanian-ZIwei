@@ -172,7 +172,7 @@ export const STAR_DATA: StarMapping[] = [
     color: '#1e3a8a'
   },
 
-  // --- 14 Assistant Stars (14辅星: 6 Lucky + 6 Malefic + 2 Misc) ---
+  // --- 14 Assistant Stars (十四辅星) ---
   {
     id: 'zuofu',
     name: '左辅',
@@ -181,8 +181,8 @@ export const STAR_DATA: StarMapping[] = [
     realm: LacanRealm.IMAGINARY,
     lacanConcept: '镜像认同 (Specular Identification)',
     description: '来自同伴的支持，强化自我的虚幻统一感。',
-    traditionalMeaning: '平辈助力，稳健，代表环境的协同。',
-    philosophicalInsight: '左辅通过“他者”的镜映，修补了主体的支离破碎感。',
+    traditionalMeaning: '平辈助力，稳健。',
+    philosophicalInsight: '左辅修补了主体初期的支离破碎感。',
     color: '#a5f3fc'
   },
   {
@@ -193,8 +193,8 @@ export const STAR_DATA: StarMapping[] = [
     realm: LacanRealm.IMAGINARY,
     lacanConcept: '自我理想的投射',
     description: '对自我能力延伸的幻想性肯定。',
-    traditionalMeaning: '异性助力，机智，代表隐秘的支援。',
-    philosophicalInsight: '右弼是自我在其社交网络中投射出的“辅助性幻象”。',
+    traditionalMeaning: '异性助力，机智。',
+    philosophicalInsight: '右弼是自我在其社交网络中投射出的辅助性幻象。',
     color: '#a78bfa'
   },
   {
@@ -204,9 +204,9 @@ export const STAR_DATA: StarMapping[] = [
     category: StarCategory.ASSISTANT,
     realm: LacanRealm.SYMBOLIC,
     lacanConcept: '主人能指 (S1)',
-    description: '白纸黑字的律法，是象征秩序中被赋予权威的文字。',
-    traditionalMeaning: '科甲，文书，正规教育，代表功名。',
-    philosophicalInsight: '文昌是进入象征界的入场券，它是真理的符号化。',
+    description: '被赋予权威的文字与律法。',
+    traditionalMeaning: '科甲，文书。',
+    philosophicalInsight: '文昌是进入象征界的入场券。',
     color: '#60a5fa'
   },
   {
@@ -216,9 +216,9 @@ export const STAR_DATA: StarMapping[] = [
     category: StarCategory.ASSISTANT,
     realm: LacanRealm.SYMBOLIC,
     lacanConcept: '知识的享乐 (S2)',
-    description: '感性的流转，是象征链条中关于艺术与感性的知识。',
-    traditionalMeaning: '口才，才艺，非传统学问，代表灵感。',
-    philosophicalInsight: '文曲是能指链条的节奏与韵律，是理性的诗意化。',
+    description: '能指链条中的韵律与感性知识。',
+    traditionalMeaning: '才艺，口才。',
+    philosophicalInsight: '文曲是理性的诗意化表达。',
     color: '#34d399'
   },
   {
@@ -229,8 +229,8 @@ export const STAR_DATA: StarMapping[] = [
     realm: LacanRealm.SYMBOLIC,
     lacanConcept: '理想它者 (Ideal Other)',
     description: '象征秩序中仁慈的引导力量。',
-    traditionalMeaning: '贵人，明助，代表外部环境的垂青。',
-    philosophicalInsight: '天魁是主体潜意识中对一个“全知全能且仁慈的父性”的渴望。',
+    traditionalMeaning: '贵人，明助。',
+    philosophicalInsight: '天魁是潜意识中对全知全能且仁慈的父性的渴望。',
     color: '#fbbf24'
   },
   {
@@ -240,9 +240,9 @@ export const STAR_DATA: StarMapping[] = [
     category: StarCategory.ASSISTANT,
     realm: LacanRealm.SYMBOLIC,
     lacanConcept: '象征界的机遇',
-    description: '在象征秩序的缝隙中闪现的机会。',
-    traditionalMeaning: '贵人，暗助，代表突如其来的转机。',
-    philosophicalInsight: '天钺是象征界对主体的偶尔奖赏，缓解了结构的压抑。',
+    description: '在象征秩序缝隙中闪现的机会。',
+    traditionalMeaning: '贵人，暗助。',
+    philosophicalInsight: '天钺是象征界对主体的偶然奖赏。',
     color: '#f472b6'
   },
   {
@@ -252,9 +252,9 @@ export const STAR_DATA: StarMapping[] = [
     category: StarCategory.ASSISTANT,
     realm: LacanRealm.REAL,
     lacanConcept: '阉割之刃 (Castration)',
-    description: '粗暴的分离与切断，是进入象征界必须付出的创伤性代价。',
-    traditionalMeaning: '刑伤，冲动，刚烈，代表痛苦的磨砺。',
-    philosophicalInsight: '擎羊是那道划开主体与原初享乐的致命一刀。',
+    description: '进入象征界必须付出的创伤性代价。',
+    traditionalMeaning: '刑伤，冲动。',
+    philosophicalInsight: '擎羊是划开主体与原初享乐的致命一刀。',
     color: '#dc2626'
   },
   {
@@ -263,10 +263,10 @@ export const STAR_DATA: StarMapping[] = [
     pinyin: 'Tuo Luo',
     category: StarCategory.ASSISTANT,
     realm: LacanRealm.REAL,
-    lacanConcept: '症状的螺旋 (The Symptom Loop)',
-    description: '主体在创伤周围不断的、强迫性的重复循环。',
-    traditionalMeaning: '拖延，暗伤，纠结，代表挥之不去的阻碍。',
-    philosophicalInsight: '陀罗是死驱力在象征界的一种体现：永无止境的循环往复。',
+    lacanConcept: '症状的螺旋',
+    description: '主体在创伤周围不断的重复循环。',
+    traditionalMeaning: '拖延，阻碍。',
+    philosophicalInsight: '陀罗是死驱力在象征界的一种体现。',
     color: '#64748b'
   },
   {
@@ -275,9 +275,9 @@ export const STAR_DATA: StarMapping[] = [
     pinyin: 'Huo Xing',
     category: StarCategory.ASSISTANT,
     realm: LacanRealm.REAL,
-    lacanConcept: '享乐的爆发 (Eruption of Jouissance)',
-    description: '不可控的情绪与破坏力，是实在界最原始的能量喷发。',
-    traditionalMeaning: '暴躁，动荡，突发事件，代表毁灭性的速度。',
+    lacanConcept: '享乐的爆发',
+    description: '不可控的情绪与原始能量喷发。',
+    traditionalMeaning: '暴躁，动荡。',
     philosophicalInsight: '火星是主体瞬间失去对语言控制的时刻。',
     color: '#f97316'
   },
@@ -287,9 +287,9 @@ export const STAR_DATA: StarMapping[] = [
     pinyin: 'Ling Xing',
     category: StarCategory.ASSISTANT,
     realm: LacanRealm.REAL,
-    lacanConcept: '超我的回响 (Superego Echo)',
-    description: '内在的、挥之不去的、隐秘的自我惩罚机制。',
-    traditionalMeaning: '阴沉，焦虑，隐患，代表持续的心灵压力。',
+    lacanConcept: '超我的回响',
+    description: '隐秘的自我惩罚机制。',
+    traditionalMeaning: '焦虑，隐患。',
     philosophicalInsight: '铃星是超我那永不停息的、尖锐的指责。',
     color: '#4338ca'
   },
@@ -301,8 +301,8 @@ export const STAR_DATA: StarMapping[] = [
     realm: LacanRealm.REAL,
     lacanConcept: '原初匮乏 (The Void)',
     description: '主体核心处的那个结构性黑洞。',
-    traditionalMeaning: '空亡，精神性，虚幻，代表物质层面的消解。',
-    philosophicalInsight: '地空揭示了欲望的核心并非任何对象，而是空无本身。',
+    traditionalMeaning: '空亡，消解。',
+    philosophicalInsight: '地空揭示了欲望的核心并非任何对象，而是空无。',
     color: '#0f172a'
   },
   {
@@ -312,9 +312,9 @@ export const STAR_DATA: StarMapping[] = [
     category: StarCategory.ASSISTANT,
     realm: LacanRealm.REAL,
     lacanConcept: '欲望的截断 (Interruption)',
-    description: '对幻想屏幕的粗暴撕裂，暴露出实在界的荒凉。',
-    traditionalMeaning: '破财，劫难，波折，代表努力的无果。',
-    philosophicalInsight: '地劫是主体在追逐幻想时，突然遭遇“它者并不存在”的瞬间。',
+    description: '对幻想屏幕的粗暴撕裂。',
+    traditionalMeaning: '破财，波折。',
+    philosophicalInsight: '地劫是突然遭遇“它者并不存在”的瞬间。',
     color: '#451a03'
   },
   {
@@ -324,9 +324,9 @@ export const STAR_DATA: StarMapping[] = [
     category: StarCategory.ASSISTANT,
     realm: LacanRealm.IMAGINARY,
     lacanConcept: '剩余享乐 (Plus-de-jouir)',
-    description: '支撑主体活下去的那份盈余，是驱动机器运转的润滑油。',
-    traditionalMeaning: '财禄，稳固，自私，代表生存的基础保障。',
-    philosophicalInsight: '禄存是主体试图抓住的那一点点维持平衡的“多余”。',
+    description: '支撑主体平衡的那点盈余。',
+    traditionalMeaning: '财禄，稳固。',
+    philosophicalInsight: '禄存是主体试图抓住的维持平衡的“多余”。',
     color: '#fb7185'
   },
   {
@@ -335,10 +335,240 @@ export const STAR_DATA: StarMapping[] = [
     pinyin: 'Tian Ma',
     category: StarCategory.ASSISTANT,
     realm: LacanRealm.SYMBOLIC,
-    lacanConcept: '转喻的运动 (Metonymic Flow)',
-    description: '欲望从一个能指不断跳跃到另一个能指的无止境过程。',
-    traditionalMeaning: '奔波，变动，机会，代表生命力的位移。',
-    philosophicalInsight: '天马是欲望的引擎，它永远在路上，拒绝任何终点的停靠。',
+    lacanConcept: '转喻的运动',
+    description: '欲望从一个能指跳跃到另一个能指的过程。',
+    traditionalMeaning: '奔波，变动。',
+    philosophicalInsight: '天马是欲望的引擎，永远在位移中。',
     color: '#fbbf24'
+  },
+
+  // --- 37 Miscellaneous Stars (三十七杂曜 - Selection) ---
+  {
+    id: 'hongluan',
+    name: '红鸾',
+    pinyin: 'Hong Luan',
+    category: StarCategory.MISC,
+    realm: LacanRealm.IMAGINARY,
+    lacanConcept: '镜像的绽放',
+    description: '镜像阶段中对“美”的初次捕获。',
+    traditionalMeaning: '婚配，喜庆，人缘。',
+    philosophicalInsight: '红鸾是主体在它者目光中构建出的最迷人的幻象。',
+    color: '#fda4af'
+  },
+  {
+    id: 'tianxi',
+    name: '天喜',
+    pinyin: 'Tian Xi',
+    category: StarCategory.MISC,
+    realm: LacanRealm.IMAGINARY,
+    lacanConcept: '享乐的火花',
+    description: '瞬间的、爆发式的快感体验。',
+    traditionalMeaning: '开心，喜事，冲喜。',
+    philosophicalInsight: '天喜是主体在象征秩序的重压下偶然获得的呼吸孔。',
+    color: '#fca5a5'
+  },
+  {
+    id: 'tianxing',
+    name: '天刑',
+    pinyin: '天刑',
+    category: StarCategory.MISC,
+    realm: LacanRealm.SYMBOLIC,
+    lacanConcept: '被划杠的主体 ($)',
+    description: '法律对欲望的直接干预与惩戒。',
+    traditionalMeaning: '孤克，刑法，手术，官司。',
+    philosophicalInsight: '天刑是象征秩序中那道冰冷的“不准”。',
+    color: '#475569'
+  },
+  {
+    id: 'tianyao',
+    name: '天姚',
+    pinyin: 'Tian Yao',
+    category: StarCategory.MISC,
+    realm: LacanRealm.IMAGINARY,
+    lacanConcept: '假面 (Semblant)',
+    description: '一种诱惑性的表演，旨在掩盖内在的空洞。',
+    traditionalMeaning: '风流，姿色，隐秘的欲望。',
+    philosophicalInsight: '天姚通过符号化的装饰来填充欲望的缺口。',
+    color: '#d946ef'
+  },
+  {
+    id: 'santai',
+    name: '三台',
+    pinyin: 'San Tai',
+    category: StarCategory.MISC,
+    realm: LacanRealm.SYMBOLIC,
+    lacanConcept: '象征界的阶梯',
+    description: '通过社会地位获得的虚假完整感。',
+    traditionalMeaning: '地位，辅佐。',
+    philosophicalInsight: '三台是主体在象征金字塔中攀爬的幻觉。',
+    color: '#93c5fd'
+  },
+  {
+    id: 'bazuo',
+    name: '八座',
+    pinyin: 'Ba Zuo',
+    category: StarCategory.MISC,
+    realm: LacanRealm.SYMBOLIC,
+    lacanConcept: '它者的宝座',
+    description: '认同大它者的位置以获得稳定性。',
+    traditionalMeaning: '威望，名声。',
+    philosophicalInsight: '八座是主体试图在它者的结构中坐稳那个“位置”。',
+    color: '#bfdbfe'
+  },
+  {
+    id: 'enguang',
+    name: '恩光',
+    pinyin: 'En Guang',
+    category: StarCategory.MISC,
+    realm: LacanRealm.SYMBOLIC,
+    lacanConcept: '大它者的凝视 (The Gaze)',
+    description: '被它者认可时所感受到的“光荣”。',
+    traditionalMeaning: '殊荣，被提拔。',
+    philosophicalInsight: '恩光是主体的自我通过它者的目光获得的非法享乐。',
+    color: '#e9d5ff'
+  },
+  {
+    id: 'tiangui',
+    name: '天贵',
+    pinyin: 'Tian Gui',
+    category: StarCategory.MISC,
+    realm: LacanRealm.SYMBOLIC,
+    lacanConcept: '象征的价值',
+    description: '在符号系统中被赋予的高贵权重。',
+    traditionalMeaning: '贵气，诚信。',
+    philosophicalInsight: '天贵是将肉体凡胎转化为“尊贵符号”的炼金术。',
+    color: '#ddd6fe'
+  },
+  {
+    id: 'longchi',
+    name: '龙池',
+    pinyin: 'Long Chi',
+    category: StarCategory.MISC,
+    realm: LacanRealm.IMAGINARY,
+    lacanConcept: '审美的升华',
+    description: '通过艺术形式来缓解实在界的焦虑。',
+    traditionalMeaning: '才艺，住宅。',
+    philosophicalInsight: '龙池是主体为自己挖掘的盛放情感的华丽池沼。',
+    color: '#99f6e4'
+  },
+  {
+    id: 'fengge',
+    name: '凤阁',
+    pinyin: 'Feng Ge',
+    category: StarCategory.MISC,
+    realm: LacanRealm.SYMBOLIC,
+    lacanConcept: '能指的优雅',
+    description: '言语修辞的精致化，是社交的外壳。',
+    traditionalMeaning: '名望，美感。',
+    philosophicalInsight: '凤阁是象征界中那层最美丽的包装纸。',
+    color: '#ccfbf1'
+  },
+  {
+    id: 'yinsha',
+    name: '阴煞',
+    pinyin: 'Yin Sha',
+    category: StarCategory.MISC,
+    realm: LacanRealm.REAL,
+    lacanConcept: '诡异 (The Uncanny)',
+    description: '熟悉之物中的陌生感，实在界的鬼魅入侵。',
+    traditionalMeaning: '邪祟，小人，心理阴影。',
+    philosophicalInsight: '阴煞是潜意识中那份无法言说的、令人不安的真相。',
+    color: '#1e293b'
+  },
+  {
+    id: 'huagai',
+    name: '华盖',
+    pinyin: 'Hua Gai',
+    category: StarCategory.MISC,
+    realm: LacanRealm.IMAGINARY,
+    lacanConcept: '孤独的华服',
+    description: '通过自我孤立来维持自恋的完整。',
+    traditionalMeaning: '才华，孤独，宗教。',
+    philosophicalInsight: '华盖是主体为自己打造的、防止它者入侵的象牙塔。',
+    color: '#fef3c7'
+  },
+  {
+    id: 'xianchi',
+    name: '咸池',
+    pinyin: 'Xian Chi',
+    category: StarCategory.MISC,
+    realm: LacanRealm.IMAGINARY,
+    lacanConcept: '肉身的泥沼',
+    description: '沉溺于感官享乐而导致的自我丧失。',
+    traditionalMeaning: '肉欲，烂桃花。',
+    philosophicalInsight: '咸池是欲望在想象界中最原始、最浑浊的沉淀。',
+    color: '#be123c'
+  },
+  {
+    id: 'guchen',
+    name: '孤辰',
+    pinyin: 'Gu Chen',
+    category: StarCategory.MISC,
+    realm: LacanRealm.REAL,
+    lacanConcept: '主体的荒凉',
+    description: '剥离所有社交关系后的纯粹孤独。',
+    traditionalMeaning: '孤僻，克男亲。',
+    philosophicalInsight: '孤辰是主体面对自己是一堆“无意义碎屑”的真相。',
+    color: '#52525b'
+  },
+  {
+    id: 'guasu',
+    name: '寡宿',
+    pinyin: 'Gua Su',
+    category: StarCategory.MISC,
+    realm: LacanRealm.REAL,
+    lacanConcept: '配偶的缺失',
+    description: '对他者互补性幻想的彻底破灭。',
+    traditionalMeaning: '寂寞，克女亲。',
+    philosophicalInsight: '寡宿揭示了“性关系不存在”的拉康命题。',
+    color: '#3f3f46'
+  },
+  {
+    id: 'feilian',
+    name: '蜚廉',
+    pinyin: 'Fei Lian',
+    category: StarCategory.MISC,
+    realm: LacanRealm.SYMBOLIC,
+    lacanConcept: '恶毒的流言',
+    description: '被外部能指恶意定义的创伤。',
+    traditionalMeaning: '流言，孤独。',
+    philosophicalInsight: '蜚廉是它者的语言对主体发起的无端攻击。',
+    color: '#78350f'
+  },
+  {
+    id: 'posui',
+    name: '破碎',
+    pinyin: 'Po Sui',
+    category: StarCategory.MISC,
+    realm: LacanRealm.REAL,
+    lacanConcept: '支离破碎的身体',
+    description: '镜像阶段之前的身体经验。',
+    traditionalMeaning: '残缺，不顺，破财。',
+    philosophicalInsight: '破碎是主体统一性幻象下潜藏的恐怖碎片。',
+    color: '#450a0a'
+  },
+  {
+    id: 'tianwu',
+    name: '天巫',
+    pinyin: 'Tian Wu',
+    category: StarCategory.MISC,
+    realm: LacanRealm.SYMBOLIC,
+    lacanConcept: '无意识的知识',
+    description: '关于命运、潜意识和符号规律的洞察。',
+    traditionalMeaning: '遗产，玄学，直觉。',
+    philosophicalInsight: '天巫是主体试图解读大它者“代码”的尝试。',
+    color: '#4c1d95'
+  },
+  {
+    id: 'tianshou',
+    name: '天寿',
+    pinyin: 'Tian Shou',
+    category: StarCategory.MISC,
+    realm: LacanRealm.REAL,
+    lacanConcept: '驱力的顽强',
+    description: '生命力在死亡阴影下的持续运作。',
+    traditionalMeaning: '长寿，宽厚。',
+    philosophicalInsight: '天寿是生命作为一种“盈余”在实在界中的持续存在。',
+    color: '#064e3b'
   }
 ];
