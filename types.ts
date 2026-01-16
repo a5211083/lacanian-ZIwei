@@ -32,6 +32,20 @@ export interface StarMapping {
   color: string;
 }
 
+export interface Palace {
+  id: string;
+  name: LocalizedString;
+  lacanMapping: LocalizedString;
+  description: LocalizedString;
+}
+
+export interface Transformation {
+  id: string;
+  name: LocalizedString;
+  lacanMapping: LocalizedString;
+  color: string;
+}
+
 export interface AnalysisState {
   selectedStarId: string | null;
   selectedCategory: StarCategory | 'ALL';
@@ -39,4 +53,6 @@ export interface AnalysisState {
   aiInsight: string | null;
   language: Language;
   style: AnalysisStyle;
+  selectedPalaceId: string | null;
+  selectedTransformationId: string | null;
 }

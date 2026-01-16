@@ -1,5 +1,27 @@
 
-import { LacanRealm, StarMapping, StarCategory } from './types';
+import { LacanRealm, StarMapping, StarCategory, Palace, Transformation } from './types';
+
+export const PALACE_DATA: Palace[] = [
+  { id: 'life', name: { zh: '命宫', en: 'Life' }, lacanMapping: { zh: '主体/自我', en: 'The Subject/Ego' }, description: { zh: '主体在象征界中的坐标，自我认同的源点。', en: 'The coordinates of the subject in the Symbolic, the source of ego identity.' } },
+  { id: 'siblings', name: { zh: '兄弟宫', en: 'Siblings' }, lacanMapping: { zh: '镜像他者', en: 'Specular Other' }, description: { zh: '同辈、镜像阶段的竞争与认同。', en: 'Peers, competition and identification in the mirror stage.' } },
+  { id: 'spouse', name: { zh: '夫妻宫', en: 'Spouse' }, lacanMapping: { zh: '大它者的欲望', en: "The Other's Desire" }, description: { zh: '主体寻找缺失的一环，欲望的投射地。', en: 'Where the subject seeks the missing link, the site of desire projection.' } },
+  { id: 'children', name: { zh: '子女宫', en: 'Children' }, lacanMapping: { zh: '升华/再造', en: 'Sublimation/Recreation' }, description: { zh: '主体的创造性产出与未来的投射。', en: 'Creative output and future projections of the subject.' } },
+  { id: 'wealth', name: { zh: '财帛宫', en: 'Wealth' }, lacanMapping: { zh: '小客体a的获取', en: 'Gaining Objet Petit a' }, description: { zh: '欲望的动力来源，对物质/价值的获取与执着。', en: 'Driving force of desire, acquisition and obsession with material/value.' } },
+  { id: 'health', name: { zh: '疾厄宫', en: 'Health' }, lacanMapping: { zh: '实在界之躯', en: 'The Real Body' }, description: { zh: '肉体作为实在界的体现，无法被符号化的痛苦。', en: 'The body as an embodiment of the Real, pain that escapes symbolization.' } },
+  { id: 'travel', name: { zh: '迁移宫', en: 'Travel' }, lacanMapping: { zh: '外部象征界', en: 'External Symbolic' }, description: { zh: '在社会公共领域中的表现与遭遇。', en: 'Performance and encounters in the public social sphere.' } },
+  { id: 'friends', name: { zh: '交友宫', en: 'Friends' }, lacanMapping: { zh: '众数大它者', en: 'Plural Big Others' }, description: { zh: '众人的评价，社会契约与符号认同。', en: 'Evaluation by the masses, social contracts, and symbolic identification.' } },
+  { id: 'career', name: { zh: '官禄宫', en: 'Career' }, lacanMapping: { zh: '符号授权', en: 'Symbolic Mandate' }, description: { zh: '主体在象征秩序中的位置与职责。', en: 'The subject’s position and duty in the Symbolic order.' } },
+  { id: 'property', name: { zh: '田宅宫', en: 'Property' }, lacanMapping: { zh: '想象的容器', en: 'Imaginary Container' }, description: { zh: '内在的安全感，作为自我的最后防线。', en: 'Internal security, the ego’s last line of defense.' } },
+  { id: 'happiness', name: { zh: '福德宫', en: 'Happiness' }, lacanMapping: { zh: '超我的享乐', en: 'Superego Jouissance' }, description: { zh: '潜意识的福报或债务，精神世界的底色。', en: 'Subconscious rewards or debts, the background of the spiritual world.' } },
+  { id: 'parents', name: { zh: '父母宫', en: 'Parents' }, lacanMapping: { zh: '原初大它者/父之名', en: 'Primordial Other / Name-of-the-Father' }, description: { zh: '律法的起源，主体诞生的先决条件。', en: 'The origin of Law, the prerequisite for the subject’s birth.' } },
+];
+
+export const TRANSFORMATION_DATA: Transformation[] = [
+  { id: 'lu', name: { zh: '化禄', en: 'Lu' }, lacanMapping: { zh: '剩余享乐/溢出', en: 'Surplus Jouissance' }, color: '#10b981' },
+  { id: 'quan', name: { zh: '化权', en: 'Quan' }, lacanMapping: { zh: '能指的统治力', en: 'Signifier Power' }, color: '#3b82f6' },
+  { id: 'ke', name: { zh: '化科', en: 'Ke' }, lacanMapping: { zh: '符号知名度', en: 'Symbolic Fame' }, color: '#a855f7' },
+  { id: 'ji', name: { zh: '化忌', en: 'Ji' }, lacanMapping: { zh: '匮乏/阉割', en: 'Lack/Castration' }, color: '#ef4444' },
+];
 
 export const STAR_DATA: StarMapping[] = [
   // --- 14 Main Stars ---

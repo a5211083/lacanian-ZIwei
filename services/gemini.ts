@@ -1,6 +1,6 @@
 
 import { GoogleGenAI } from "@google/genai";
-import { StarMapping, Language, AnalysisStyle } from "../types";
+import { StarMapping, Language, AnalysisStyle, Palace, Transformation } from "../types";
 
 export async function getDetailedAnalysis(
   star: StarMapping, 
@@ -69,5 +69,41 @@ export async function getDetailedAnalysis(
   } catch (error) {
     console.error("AI Analysis Error:", error);
     return lang === 'zh' ? "解析过程中出现波动，请重试。" : "Analysis fluctuated. Please try again.";
+  }
+}
+
+export async function getPalaceStarAnalysis(
+  star: StarMapping,
+  palace: Palace,
+  transformation: Transformation | null,
+  lang: Language = 'zh'
+): Promise<string> {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const targetLang = lang === 'zh' ? 'Chinese' : 'English';
+
+  const prompt = `
+    Context:
+    Star: ${star.name[lang]} (${star.pinyin}) - Concept: ${star.lacanConcept[lang]}
+    Palace: ${palace.name[lang]} - Lacanian Mapping: ${palace.lacanMapping[lang]}
+    Transformation (Optional): ${transformation ? transformation.name[lang] + " (" + transformation.lacanMapping[lang] + ")" : "None"}
+
+    Task:
+    Provide a Lacanian interpretation (100 words) of this combination. 
+    Explain how this star operates within this specific psychic area (Palace) and how the Transformation (if any) alters the subject's jouissance or desire.
+    
+    Respond in ${targetLang}.
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: prompt,
+      config: {
+        systemInstruction: "You are a Lacanian Psychoanalyst applying your framework to Zi Wei Dou Shu systems."
+      }
+    });
+    return response.text || "";
+  } catch (error) {
+    return lang === 'zh' ? "宫位解析失败。" : "Palace analysis failed.";
   }
 }
