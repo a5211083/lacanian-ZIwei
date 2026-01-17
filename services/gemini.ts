@@ -1,6 +1,7 @@
 
 import { GoogleGenAI } from "@google/genai";
 import { StarMapping, Language, AnalysisStyle, Palace, Transformation } from "../types";
+import * as Iztro from 'iztro';
 
 export async function getDetailedAnalysis(
   star: StarMapping, 
@@ -11,6 +12,7 @@ export async function getDetailedAnalysis(
 ): Promise<string> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const targetLang = lang === 'zh' ? 'Chinese' : 'English';
+  console.log()
 
   let styleDesc = "";
   if (style === 'Lacanian') styleDesc = "使用拉康精神分析视角，重点关注实在、想象与象征界的博弈。";

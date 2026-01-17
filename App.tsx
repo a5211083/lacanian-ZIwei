@@ -26,7 +26,7 @@ const App: React.FC = () => {
   });
 
   const [activeTab, setActiveTab] = useState<StarCategory>(StarCategory.MAIN);
-
+  // newBazi-八字输出 newChart-生成紫微命盘数据
   const handleGenerate = useCallback(() => {
     const { chart: newChart, bazi: newBazi } = generateZwdsChart(birthDate, birthHour, timezone);
     setChart(newChart);
