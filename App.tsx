@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { STAR_DATA, PALACE_DATA, TRANSFORMATION_DATA } from './data';
 import { AnalysisState, StarMapping, Language, AnalysisStyle, ChartPalace, Palace, Transformation, StarCategory, LacanRealm } from './types';
@@ -9,6 +10,7 @@ import { getDetailedAnalysis } from './services/gemini';
 const App: React.FC = () => {
   const [chart, setChart] = useState<ChartPalace[]>([]);
   const [viewMode, setViewMode] = useState<'GRID' | 'TOPOLOGY'>('GRID');
+  const [isCopied, setIsCopied] = useState(false);
   
   const [state, setState] = useState<AnalysisState>({
     selectedStar: null,
@@ -23,7 +25,6 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<StarCategory>(StarCategory.MAIN);
 
   const generateRandomChart = useCallback(() => {
-    // 随机生成日期 1970 - 2010
     const year = Math.floor(Math.random() * (2010 - 1970 + 1)) + 1970;
     const month = Math.floor(Math.random() * 12) + 1;
     const day = Math.floor(Math.random() * 28) + 1;
@@ -33,7 +34,6 @@ const App: React.FC = () => {
     const { chart: newChart } = generateZwdsChart(dateStr, hour, 8);
     
     setChart(newChart);
-    // 重置选择状态，以便用户重新开始探索
     setState(prev => ({
       ...prev,
       selectedStar: null,
@@ -43,7 +43,6 @@ const App: React.FC = () => {
     }));
   }, []);
 
-  // 初始加载生成一个随机命盘
   useEffect(() => {
     generateRandomChart();
   }, [generateRandomChart]);
@@ -75,6 +74,14 @@ const App: React.FC = () => {
       setState(prev => ({ ...prev, aiInsight: "Analysis failed. Please check your API configuration.", loading: false }));
     }
   };
+
+  const handleCopy = useCallback(() => {
+    if (!state.aiInsight) return;
+    navigator.clipboard.writeText(state.aiInsight).then(() => {
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    });
+  }, [state.aiInsight]);
 
   const t = (zh: string, en: string) => (state.language === 'zh' ? zh : en);
 
@@ -109,7 +116,6 @@ const App: React.FC = () => {
       </header>
 
       <main className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-10 mt-8">
-        {/* Left Column: Chart */}
         <div className="lg:col-span-7 space-y-8">
            <div className="flex bg-slate-900/40 p-1.5 rounded-2xl border border-slate-800/50 w-fit backdrop-blur-md">
               <button onClick={() => setViewMode('GRID')} className={`px-8 py-2.5 rounded-xl text-[10px] font-black tracking-widest transition-all ${viewMode === 'GRID' ? 'bg-indigo-600 shadow-lg text-white' : 'text-slate-600 hover:text-slate-300'}`}>GRID</button>
@@ -125,7 +131,6 @@ const App: React.FC = () => {
             </div>
         </div>
 
-        {/* Right Column: Analysis & Library */}
         <div className="lg:col-span-5 space-y-8">
           <div className="bg-slate-900/40 border border-slate-800/50 rounded-[3.5rem] p-8 md:p-12 shadow-2xl relative overflow-hidden backdrop-blur-2xl transition-all border-indigo-500/5 hover:border-indigo-500/20">
             {state.selectedStar ? (
@@ -179,8 +184,15 @@ const App: React.FC = () => {
                 </button>
 
                 {state.aiInsight && (
-                  <div className="bg-slate-950/60 p-8 rounded-[3rem] border border-indigo-500/10 animate-in zoom-in-95 backdrop-blur-md">
-                    <p className="text-sm leading-relaxed text-slate-300 font-serif italic whitespace-pre-wrap">
+                  <div className="bg-slate-950/60 p-8 rounded-[3rem] border border-indigo-500/10 animate-in zoom-in-95 backdrop-blur-md relative group/insight">
+                    <button 
+                      onClick={handleCopy}
+                      className={`absolute top-4 right-4 p-2 rounded-xl border border-slate-800 transition-all opacity-0 group-hover/insight:opacity-100 hover:border-indigo-500 active:scale-90 flex items-center gap-2 ${isCopied ? 'bg-indigo-600 border-indigo-500 text-white opacity-100' : 'bg-slate-900 text-slate-400'}`}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                      <span className="text-[10px] font-black tracking-widest">{isCopied ? t('已复制', 'COPIED') : t('复制', 'COPY')}</span>
+                    </button>
+                    <p className="text-sm leading-relaxed text-slate-300 font-serif italic whitespace-pre-wrap pr-8">
                       {state.aiInsight}
                     </p>
                   </div>
@@ -201,7 +213,6 @@ const App: React.FC = () => {
             )}
           </div>
 
-          {/* Star Library Drawer */}
           <div className="bg-slate-900/40 border border-slate-800/50 rounded-[3rem] p-8 backdrop-blur-xl">
             <div className="flex gap-8 mb-6 border-b border-slate-800/40 pb-4 overflow-x-auto no-scrollbar">
               {[StarCategory.MAIN, StarCategory.ASSISTANT, StarCategory.MISC].map(cat => (
