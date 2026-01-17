@@ -2,8 +2,10 @@
 import { STAR_DATA, PALACE_DATA } from '../data';
 import { ChartPalace, StarMapping } from '../types';
 
-const BRANCHES = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
-const STEMS = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
+// import * as Iztro from 'iztro';
+
+const ZHI = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+const GAN = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
 
 export interface BaziInfo {
   year: string;
@@ -16,32 +18,103 @@ export interface BaziInfo {
  * Calculates a simplified but formally correct Bazi (Four Pillars) string.
  */
 export function calculateBazi(date: Date): BaziInfo {
-  // Use a reference date: 1984 (Jia Zi Year)
-  const yearDiff = date.getFullYear() - 1984;
-  const yearStemIdx = (yearDiff % 10 + 10) % 10;
-  const yearBranchIdx = (yearDiff % 12 + 12) % 12;
+  // === 内部工具函数 ===
+  const year = date.getFullYear(), month = date.getMonth(), day = date.getDate(), hour = date.getHours(), minute = date.getMinutes();
 
-  // Month Pillar (simplified based on Solar month)
-  const monthStemIdx = (yearStemIdx * 2 + date.getMonth() + 2) % 10;
-  const monthBranchIdx = (date.getMonth() + 2) % 12;
+    // 1. 计算儒略日 (Julian Day)
+    // 这是一个天文学的标准时间单位，将时间量化为浮点数
+    const getJD = (y, m, d, h, min) => {
+        if (m <= 2) { y -= 1; m += 12; }
+        const A = Math.floor(y / 100);
+        const B = 2 - A + Math.floor(A / 4);
+        const dayFraction = (h + min / 60) / 24;
+        return Math.floor(365.25 * (y + 4716)) + 
+               Math.floor(30.6001 * (m + 1)) + 
+               d + dayFraction + B - 1524.5;
+    };
 
-  // Day Pillar (Approximate reference from 1984-01-01 which was Jia Zi)
-  const baseDate = new Date('1984-01-01T00:00:00Z');
-  const dayDiff = Math.floor((date.getTime() - baseDate.getTime()) / (24 * 3600 * 1000));
-  const dayStemIdx = (dayDiff % 10 + 10) % 10;
-  const dayBranchIdx = (dayDiff % 12 + 12) % 12;
+    // 2. 计算太阳视黄经 (0-360度)
+    // 使用简化的 VSOP/Meeus 算法，精度足以处理八字节气
+    const getSolarLongitude = (jd) => {
+        const D = jd - 2451545.0; // 距离 J2000.0 的天数
+        const rad = Math.PI / 180;
+        
+        // 平黄经 (Mean Longitude)
+        let L = (280.460 + 0.9856474 * D) % 360;
+        // 平近点角 (Mean Anomaly)
+        let g = (357.528 + 0.9856003 * D) % 360;
+        
+        // 黄道经度 = L + 中心差修正
+        // 这一步修正了地球公转速度不均导致的节气时间不固定的问题
+        let lambda = L + 1.915 * Math.sin(g * rad) + 0.020 * Math.sin(2 * g * rad);
+        
+        // 归一化到 0-360
+        if (lambda < 0) lambda += 360;
+        if (lambda >= 360) lambda -= 360;
+        return lambda;
+    };
 
-  // Hour Pillar
-  const hourBranchIdx = Math.floor((date.getHours() + 1) / 2) % 12;
-  const hourStemIdx = (dayStemIdx * 2 + hourBranchIdx) % 10;
+    // === 主计算逻辑 ===
+
+    const jd = getJD(year, month, day, hour, minute);
+    const lambda = getSolarLongitude(jd);
+
+    // --- A. 计算【年柱】 ---
+    // 只有当太阳到达黄经 315° (立春) 时，才算新的一年。
+    // 如果当前处于年初(1月或2月)，且太阳黄经 < 315°，说明还在上一年的管辖内（即辛丑年尾，非壬寅年头）。
+    let baziYear = year;
+    // 逻辑：如果是1月或2月，并且角度在270(冬至)到315(立春)之间，说明还没立春，算上一年
+    if (month <= 2 && lambda >= 270 && lambda < 315) {
+        baziYear = year - 1;
+    }
+    
+    // 计算年干支 1264 1984
+    const yearOffset = (baziYear - 1260 + 60000) % 60;
+    const yearGanIdx = yearOffset % 10;
+
+    // --- B. 计算【月柱】 ---
+    // 月柱完全取决于太阳角度。
+    // 立春(315°)对应寅月(索引2)，每隔30度换一个月。
+    // 公式推导：(lambda - 315) / 30
+    
+    let correctedLambda = lambda;
+    // 处理跨越春分点(0度)的情况：比如 15度(清明) 实际上是 315 + 60 = 375度
+    if (lambda < 315) {
+        correctedLambda = lambda + 360;
+    }
+    
+    // 计算月支 (寅=2, 卯=3...)
+    const monthBranchTerm = Math.floor((correctedLambda - 315) / 30);
+    const monthZhiIdx = (2 + monthBranchTerm + 1) % 12;
+
+    // 计算月干 (五虎遁：甲己之年丙作首)
+    // 寅月的干 = (年干 x 2 + 2)
+    const monthGanBase = (yearGanIdx % 5) * 2 + 2;
+    const monthGanIdx = (monthGanBase + monthBranchTerm + 1) % 10;
+
+    // --- C. 计算【日柱】 ---
+    // 日柱是连续的周期，不依赖节气，直接用 JD 算出绝对天数
+    // 修正值 +49 是基于 1900-01-01 (甲戌) 推算出来的基准偏移
+    const dayCyclical = Math.floor(jd + 0.5 + 49); 
+    const dayOffset = dayCyclical % 60;
+    const dayGanIdx = dayOffset % 10;
+
+    // --- D. 计算【时柱】 ---
+    // 时支：(小时+1)/2
+    const hourZhiIdx = (Math.floor((hour + 1) / 2) + 8) % 12;
+    // 时干 (五鼠遁：甲己还加甲)
+    const hourGanBase = (dayGanIdx % 5) * 2;
+    const hourGanIdx = (hourGanBase + hourZhiIdx + 2) % 10;
+
 
   return {
-    year: `${STEMS[yearStemIdx]}${BRANCHES[yearBranchIdx]}`,
-    month: `${STEMS[monthStemIdx]}${BRANCHES[monthBranchIdx]}`,
-    day: `${STEMS[dayStemIdx]}${BRANCHES[dayBranchIdx]}`,
-    hour: `${STEMS[hourStemIdx]}${BRANCHES[hourBranchIdx]}`
+    year: `${GAN[yearGanIdx]}${ZHI[yearOffset % 12]}`,
+    month: `${GAN[monthGanIdx]}${ZHI[monthZhiIdx]}`,
+    day: `${GAN[(dayOffset + 1) % 10]}${ZHI[(dayOffset + 7) % 12]}`,
+    hour: `${GAN[hourGanIdx]}${ZHI[hourZhiIdx]}`
   };
 }
+
 
 /**
  * Generates the ZWDS Chart based on precise date/time inputs.
@@ -62,7 +135,7 @@ export function generateZwdsChart(dateStr: string, hourIdx: number, timezone: nu
 
   // Adjust date for Bazi calculation (local time)
   const localDate = new Date(date.getTime());
-  
+
   const bazi = calculateBazi(localDate);
   
   const m = localDate.getMonth() + 1;
@@ -75,7 +148,7 @@ export function generateZwdsChart(dateStr: string, hourIdx: number, timezone: nu
   // Find Life Palace Index: Start from Yin(2), count forward Month, then backward Hour
   const lifeIdx = (2 + (m - 1) - hourBranchIdx + 12) % 12;
 
-  const chart: ChartPalace[] = BRANCHES.map((branch, idx) => {
+  const chart: ChartPalace[] = ZHI.map((branch, idx) => {
     // Determine which palace lands in this branch
     // lifeIdx is where 'life' palace is.
     // Palaces are arranged counter-clockwise from life.
