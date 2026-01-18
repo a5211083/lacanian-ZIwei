@@ -63,8 +63,8 @@ async function callGLMApi(prompt: string, targetLang: string, glmstring: string)
   // 替换为实际的GLM API地址和密钥
   const glm = JSON.parse(glmstring);
 
-  const glmApiKey = glm.name["GLM_API_KEY"];
-  const glmApiUrl = glm.name["ANTHROPIC_BASE_URL"] || "https://open.bigmodel.cn/api/paas/v4/chat/completions";
+  const glmApiKey = glm["GLM_API_KEY"];
+  const glmApiUrl = glm["ANTHROPIC_BASE_URL"] || "https://open.bigmodel.cn/api/paas/v4/chat/completions";
 
   if (!glmApiKey) {
     throw new Error("GLM API密钥未配置");
