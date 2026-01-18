@@ -75,25 +75,69 @@ const App: React.FC = () => {
     }
   };
 
-  const handleCopy = useCallback(() => {
-  if (!state.aiInsight) return;
+  const handleCopy = useCallback(async () => {
+    if (!state.aiInsight) return;
 
-  // 尝试使用现代 API
-  if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(state.aiInsight)
-      .then(() => {
+    // 1. 优先使用现代 API (最顺滑，不触发键盘)
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(state.aiInsight);
         setIsCopied(true);
         setTimeout(() => setIsCopied(false), 2000);
-      })
-      .catch(() => {
-        // 如果现代 API 失败，尝试回退方案
-        fallbackCopyText(state.aiInsight);
-      });
-  } else {
-    // 环境不支持现代 API，直接使用回退方案
-    fallbackCopyText(state.aiInsight);
-  }
-}, [state.aiInsight]);
+        return;
+      } catch (err) {
+        console.warn("Clipboard API 失败，尝试回退方案");
+      }
+    }
+
+    // 2. 优化后的回退方案 (解决黑屏/键盘弹出问题)
+    const textArea = document.createElement("textarea");
+    textArea.value = state.aiInsight;
+    
+    // 防止手机端弹出键盘的关键配置
+    textArea.readOnly = true; // 设置只读，防止触发键盘
+    // @ts-ignore
+    textArea.inputMode = 'none'; // 进一步暗示浏览器不要显示虚拟键盘
+
+    // 样式优化：彻底隐藏且不占位
+    textArea.style.position = "fixed";
+    textArea.style.left = "-9999px";
+    textArea.style.top = `${window.scrollY}px`; // 保持在当前滚动高度，防止页面跳动
+    textArea.style.width = "2em";
+    textArea.style.height = "2em";
+    textArea.style.padding = "0";
+    textArea.style.border = "none";
+    textArea.style.outline = "none";
+    textArea.style.boxShadow = "none";
+    textArea.style.background = "transparent";
+
+    document.body.appendChild(textArea);
+
+    // 针对不同系统的选中策略
+    const isiOS = navigator.userAgent.match(/ipad|iphone/i);
+    if (isiOS) {
+      const range = document.createRange();
+      range.selectNodeContents(textArea);
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+      textArea.setSelectionRange(0, 999999);
+    } else {
+      textArea.select();
+    }
+
+    try {
+      const successful = document.execCommand('copy');
+      if (successful) {
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+      }
+    } catch (err) {
+      console.error('复制失败', err);
+    }
+
+    document.body.removeChild(textArea);
+  }, [state.aiInsight]);
 
   // 兼容性回退函数：手动创建一个不可见的输入框进行复制
   const fallbackCopyText = (text: string) => {
