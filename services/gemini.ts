@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { StarMapping, Language, AnalysisStyle, Palace, Transformation } from "../types";
 
 /**
@@ -11,9 +11,10 @@ export async function getDetailedAnalysis(
   trans: Transformation | null,
   lang: Language = 'zh', 
   style: AnalysisStyle = 'Lacanian',
-  onStream?: (text: string) => void // 新增：流式输出回调
+  onStream?: (text: string) => void
 ): Promise<string> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
+  // Fix: Initialize GoogleGenAI instance according to SDK guidelines
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const targetLang = lang === 'zh' ? 'Chinese' : 'English';
 
   let styleDesc = "";
@@ -30,21 +31,31 @@ export async function getDetailedAnalysis(
     - 风格：${styleDesc}
 
     要求：
-    1. 生成约200字的深度分析报告，不要生成带格式的文本，并保持语言流畅。
+    1. 生成约200字的深度分析报告，不要生成带格式的文本（不要Markdown加粗），并保持语言流畅。
     2. 解释该组合如何影响主体的欲望结构和心理地图。学术严谨，避免通俗化解释，结构清晰。
     3. 给出一句深刻的哲学启示。
     请使用${targetLang}回答。
   `;
 
-  // 1. 优先调用 Google AI (保持原样)
+  let fullText = "";
+
+  // 1. 优先调用 Google AI (使用流式接口)
   try {
-    const response = await (ai as any).models.generateContent({
-      model: 'gemini-3-pro-preview',
+    // Fix: Using gemini-3-flash-preview for text generation tasks
+    const result = await ai.models.generateContentStream({
+      model: 'gemini-3-flash-preview',
       contents: prompt,
     });
-    const text = response.text || "无法生成解析。";
-    if (onStream) onStream(text); // 如果 Google 成功，直接一次性回调
-    return text;
+
+    for await (const chunk of result) {
+      // Fix: chunk.text is a property, not a method
+      const text = chunk.text;
+      if (text) {
+        fullText += text;
+        if (onStream) onStream(fullText);
+      }
+    }
+    return fullText;
   } catch (error) {
     console.warn("Google AI 调用失败，尝试通过 Vercel 路由调用备用流式 AI...");
 
@@ -57,15 +68,11 @@ export async function getDetailedAnalysis(
       });
 
       if (!response.ok) {
-        const errorMsg = `API 失败: ${response.status}`;
-        console.error(errorMsg);
-        return errorMsg;
+        throw new Error(`API 失败: ${response.status}`);
       }
 
-      // 处理 ReadableStream
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
-      let fullText = "";
 
       if (!reader) throw new Error("无法读取响应流");
 
@@ -74,7 +81,6 @@ export async function getDetailedAnalysis(
         if (done) break;
 
         const chunk = decoder.decode(value, { stream: true });
-        // SSE 格式通常以 "data: " 开头
         const lines = chunk.split("\n");
         
         for (const line of lines) {
@@ -84,14 +90,9 @@ export async function getDetailedAnalysis(
           if (trimmedLine.startsWith("data: ")) {
             try {
               const json = JSON.parse(trimmedLine.slice(6));
-              // 兼容 SiliconFlow/OpenAI 的流式格式: choices[0].delta.content
               const content = json.choices[0]?.delta?.content || "";
-              
-              // 如果你需要看到 DeepSeek R1 的思考过程，可以加上这行：
-              // const reasoning = json.choices[0]?.delta?.reasoning_content || "";
-              
               fullText += content;
-              if (onStream) onStream(fullText); // 实时触发回调，UI 会即时更新
+              if (onStream) onStream(fullText);
             } catch (e) {
               // 忽略不完整的 JSON 块
             }

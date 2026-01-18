@@ -75,12 +75,3 @@ export interface AnalysisState {
   aiInsight: string | null;
   language: Language;
 }
-
-export interface Transformation {
-  id: string;
-  name: LocalizedString;
-  color: string;
-  concept: LocalizedString;
-}
-
-

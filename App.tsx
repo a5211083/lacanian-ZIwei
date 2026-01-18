@@ -60,27 +60,43 @@ const App: React.FC = () => {
 
   const executeAnalysis = async () => {
     if (!state.selectedStar) return;
-    setState(prev => ({ ...prev, loading: true }));
+    
+    // Reset state and set empty string to trigger the box appearance immediately
+    setState(prev => ({ ...prev, loading: true, aiInsight: "" }));
+    
     try {
-      const insight = await getDetailedAnalysis(
+      await getDetailedAnalysis(
         state.selectedStar, 
         state.selectedPalace, 
         state.selectedTrans, 
         state.language, 
-        state.style
+        state.style,
+        (currentText) => {
+          setState(prev => ({ ...prev, aiInsight: currentText }));
+        }
       );
-      setState(prev => ({ ...prev, aiInsight: insight, loading: false }));
+      setState(prev => ({ ...prev, loading: false }));
     } catch {
-      setState(prev => ({ ...prev, aiInsight: "Analysis failed. Please check your API configuration.", loading: false }));
+      setState(prev => ({ 
+        ...prev, 
+        aiInsight: "Analysis failed. Please check your API configuration.", 
+        loading: false 
+      }));
     }
   };
 
   const handleCopy = useCallback(() => {
     if (!state.aiInsight) return;
-    navigator.clipboard.writeText(state.aiInsight).then(() => {
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
-    });
+    
+    // Robust copy logic with feedback
+    navigator.clipboard.writeText(state.aiInsight)
+      .then(() => {
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+      })
+      .catch((err) => {
+        console.error('Failed to copy text: ', err);
+      });
   }, [state.aiInsight]);
 
   const t = (zh: string, en: string) => (state.language === 'zh' ? zh : en);
@@ -183,18 +199,27 @@ const App: React.FC = () => {
                   {state.loading ? t('能指结构生成中...', 'DECODING RSI STRUCTURE...') : t('执行拓扑深度了解', 'EXECUTE ANALYSIS')}
                 </button>
 
-                {state.aiInsight && (
-                  <div className="bg-slate-950/60 p-8 rounded-[3rem] border border-indigo-500/10 animate-in zoom-in-95 backdrop-blur-md relative group/insight">
+                {state.aiInsight !== null && (
+                  <div className="bg-slate-950/60 p-8 rounded-[3rem] border border-indigo-500/10 animate-in zoom-in-95 backdrop-blur-md relative group/insight min-h-[120px]">
                     <button 
                       onClick={handleCopy}
-                      className={`absolute top-4 right-4 p-2 rounded-xl border border-slate-800 transition-all opacity-0 group-hover/insight:opacity-100 hover:border-indigo-500 active:scale-90 flex items-center gap-2 ${isCopied ? 'bg-indigo-600 border-indigo-500 text-white opacity-100' : 'bg-slate-900 text-slate-400'}`}
+                      disabled={!state.aiInsight}
+                      className={`absolute top-4 right-4 p-2 rounded-xl border border-slate-800 transition-all ${state.aiInsight ? 'opacity-0 group-hover/insight:opacity-100' : 'opacity-0'} hover:border-indigo-500 active:scale-90 flex items-center gap-2 ${isCopied ? 'bg-indigo-600 border-indigo-500 text-white opacity-100' : 'bg-slate-900 text-slate-400'}`}
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                      {isCopied ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                      )}
                       <span className="text-[10px] font-black tracking-widest">{isCopied ? t('已复制', 'COPIED') : t('复制', 'COPY')}</span>
                     </button>
-                    <p className="text-sm leading-relaxed text-slate-300 font-serif italic whitespace-pre-wrap pr-8">
+                    
+                    <div className="text-sm leading-relaxed text-slate-300 font-serif italic whitespace-pre-wrap pr-4">
                       {state.aiInsight}
-                    </p>
+                      {state.loading && (
+                        <span className="inline-block w-2 h-4 bg-indigo-500 animate-pulse ml-1 align-middle"></span>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>

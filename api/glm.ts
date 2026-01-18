@@ -32,7 +32,7 @@ export default async function handler(req: Request) {
         "Authorization": `Bearer ${apiKey.trim()}`
       },
       body: JSON.stringify({
-        model: "Qwen/Qwen2-7B-Instruct", // 这里是目前免费最强的模型 Qwen/Qwen2-7B-Instruct  THUDM/GLM-Z1-9B-0414  deepseek-ai/DeepSeek-R1-Distill-Qwen-7B
+        model: "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B", // 这里是目前免费最强的模型 Qwen/Qwen2-7B-Instruct  THUDM/GLM-Z1-9B-0414  deepseek-ai/DeepSeek-R1-Distill-Qwen-7B
         messages: [{ role: "user", content: prompt }],
         temperature: 0.7,
         max_tokens: 1024,
@@ -50,7 +50,7 @@ export default async function handler(req: Request) {
       }), { status: response.status });
     }
 
-    // const data = await response.json();
+    // 5. 返回流式响应
     return new Response(response.body, {
       headers: {
         "Content-Type": "text/event-stream; charset=utf-8",
@@ -58,12 +58,6 @@ export default async function handler(req: Request) {
         "Connection": "keep-alive",
         "X-Accel-Buffering": "no" // 禁止 Vercel/Nginx 缓冲数据
       },
-    });
-    
-    // 5. 统一输出格式 (兼容你原来的前端逻辑)
-    return new Response(JSON.stringify(data), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
     });
 
   } catch (err: any) {
