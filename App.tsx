@@ -94,7 +94,7 @@ const App: React.FC = () => {
       <header className="w-full max-w-7xl mb-12 flex flex-col items-center gap-8">
         <div className="text-center">
           <h1 className="text-5xl md:text-6xl font-black bg-gradient-to-br from-indigo-300 via-purple-400 to-rose-400 bg-clip-text text-transparent italic leading-tight uppercase tracking-tighter">
-            Lacanian ZiWei Explorer
+            Lacanian ZiWei
           </h1>
           <p className="text-slate-500 text-[10px] tracking-[0.8em] uppercase font-bold mt-4 opacity-60">
             {t('实在 · 象征 · 想象的命理拓扑', 'RSI Topological Mapping System')}
