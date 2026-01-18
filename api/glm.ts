@@ -32,7 +32,7 @@ export default async function handler(req: Request) {
         "Authorization": `Bearer ${apiKey.trim()}`
       },
       body: JSON.stringify({
-        model: "THUDM/GLM-Z1-9B-0414", // 这里是目前免费最强的模型
+        model: "Qwen/Qwen2-7B-Instruct", // 这里是目前免费最强的模型 Qwen/Qwen2-7B-Instruct  THUDM/GLM-Z1-9B-0414
         messages: [{ role: "user", content: prompt }],
         temperature: 0.7,
         max_tokens: 1024,
