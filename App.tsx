@@ -26,7 +26,7 @@ const App: React.FC = () => {
   // 辅助函数：过滤掉 <think> 标签及其内容
   const formatInsight = (text: string | null) => {
     if (!text) return '';
-    return text.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+    return text.replace(/[\s\S]*?<\/think>/g, '').trim();
   };
 
   const generateRandomChart = useCallback(() => {
