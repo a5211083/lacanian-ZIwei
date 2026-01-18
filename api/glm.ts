@@ -32,7 +32,7 @@ export default async function handler(req: Request) {
         "Authorization": `Bearer ${apiKey.trim()}`
       },
       body: JSON.stringify({
-        model: "Qwen/Qwen2-7B-Instruct", // 这里是目前免费最强的模型 Qwen/Qwen2-7B-Instruct  THUDM/GLM-Z1-9B-0414
+        model: "Qwen/Qwen2-7B-Instruct", // 这里是目前免费最强的模型 Qwen/Qwen2-7B-Instruct  THUDM/GLM-Z1-9B-0414  deepseek-ai/DeepSeek-R1-Distill-Qwen-7B
         messages: [{ role: "user", content: prompt }],
         temperature: 0.7,
         max_tokens: 1024,
