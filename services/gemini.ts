@@ -1,4 +1,3 @@
-
 import { GoogleGenAI } from "@google/genai";
 import { StarMapping, Language, AnalysisStyle, Palace, Transformation } from "../types";
 import * as Iztro from 'iztro';
@@ -10,9 +9,9 @@ export async function getDetailedAnalysis(
   lang: Language = 'zh', 
   style: AnalysisStyle = 'Lacanian'
 ): Promise<string> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  // 保留你原来的 Google 配置
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
   const targetLang = lang === 'zh' ? 'Chinese' : 'English';
-  console.log()
 
   let styleDesc = "";
   if (style === 'Lacanian') styleDesc = "使用拉康精神分析视角，重点关注实在、想象与象征界的博弈。";
@@ -34,13 +33,37 @@ export async function getDetailedAnalysis(
     请使用${targetLang}回答。
   `;
 
+  // 1. 优先调用 Google AI (保持你的原样)
   try {
-    const response = await ai.models.generateContent({
+    const response = await (ai as any).models.generateContent({
       model: 'gemini-3-pro-preview',
       contents: prompt,
     });
     return response.text || "无法生成解析。";
   } catch (error) {
-    return "解析发生错误，请稍后重试。";
+    console.warn("Google AI 调用失败，尝试通过 Vercel 路由调用 GLM...");
+
+    // 2. Google 失败时，请求我们自己的 Vercel API 路由
+    // 前端 fetch 部分修改建议
+    try {
+      const glmResponse = await fetch('/api/glm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
+
+      const result = await glmResponse.json();
+
+      if (!glmResponse.ok) {
+        // 这样你会看到具体的错误原因，比如 "API Key 格式不对" 之类的
+        const errorMsg = `GLM 失败: ${result.error || '未知错误'}. ${result.detail || ''}`;
+        console.error(errorMsg);
+        return errorMsg; 
+      }
+
+      return result.choices[0].message.content;
+    } catch (e: any) {
+      return "网络连接失败或后端接口崩溃: " + e.message;
+    }
   }
 }
