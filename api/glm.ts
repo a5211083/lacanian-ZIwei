@@ -36,7 +36,7 @@ export default async function handler(req: Request) {
         messages: [{ role: "user", content: prompt }],
         temperature: 0.7,
         max_tokens: 1024,
-        stream: false
+        stream: true
       })
     });
 
