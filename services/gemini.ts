@@ -11,7 +11,7 @@ export async function getDetailedAnalysis(
   trans: Transformation | null,
   lang: Language = 'zh', 
   style: AnalysisStyle = 'Lacanian',
-  onStream?: false//(text: string) => void // 新增：流式输出回调
+  onStream?: (text: string) => void // 新增：流式输出回调
 ): Promise<string> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
   const targetLang = lang === 'zh' ? 'Chinese' : 'English';

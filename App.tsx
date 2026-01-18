@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { STAR_DATA, PALACE_DATA, TRANSFORMATION_DATA } from './data';
 import { AnalysisState, StarMapping, Language, AnalysisStyle, ChartPalace, Palace, Transformation, StarCategory, LacanRealm } from './types';
@@ -23,6 +22,12 @@ const App: React.FC = () => {
   });
 
   const [activeTab, setActiveTab] = useState<StarCategory>(StarCategory.MAIN);
+
+  // 辅助函数：过滤掉 <think> 标签及其内容
+  const formatInsight = (text: string | null) => {
+    if (!text) return '';
+    return text.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+  };
 
   const generateRandomChart = useCallback(() => {
     const year = Math.floor(Math.random() * (2010 - 1970 + 1)) + 1970;
@@ -77,11 +82,13 @@ const App: React.FC = () => {
 
   const handleCopy = useCallback(async () => {
     if (!state.aiInsight) return;
+    
+    // 复制时同样过滤掉 <think> 内容
+    const cleanText = formatInsight(state.aiInsight);
 
-    // 1. 优先使用现代 API (最顺滑，不触发键盘)
     if (navigator.clipboard && window.isSecureContext) {
       try {
-        await navigator.clipboard.writeText(state.aiInsight);
+        await navigator.clipboard.writeText(cleanText);
         setIsCopied(true);
         setTimeout(() => setIsCopied(false), 2000);
         return;
@@ -90,19 +97,14 @@ const App: React.FC = () => {
       }
     }
 
-    // 2. 优化后的回退方案 (解决黑屏/键盘弹出问题)
     const textArea = document.createElement("textarea");
-    textArea.value = state.aiInsight;
-    
-    // 防止手机端弹出键盘的关键配置
-    textArea.readOnly = true; // 设置只读，防止触发键盘
+    textArea.value = cleanText;
+    textArea.readOnly = true;
     // @ts-ignore
-    textArea.inputMode = 'none'; // 进一步暗示浏览器不要显示虚拟键盘
-
-    // 样式优化：彻底隐藏且不占位
+    textArea.inputMode = 'none';
     textArea.style.position = "fixed";
     textArea.style.left = "-9999px";
-    textArea.style.top = `${window.scrollY}px`; // 保持在当前滚动高度，防止页面跳动
+    textArea.style.top = `${window.scrollY}px`;
     textArea.style.width = "2em";
     textArea.style.height = "2em";
     textArea.style.padding = "0";
@@ -113,7 +115,6 @@ const App: React.FC = () => {
 
     document.body.appendChild(textArea);
 
-    // 针对不同系统的选中策略
     const isiOS = navigator.userAgent.match(/ipad|iphone/i);
     if (isiOS) {
       const range = document.createRange();
@@ -138,44 +139,6 @@ const App: React.FC = () => {
 
     document.body.removeChild(textArea);
   }, [state.aiInsight]);
-
-  // 兼容性回退函数：手动创建一个不可见的输入框进行复制
-  const fallbackCopyText = (text: string) => {
-    const textArea = document.createElement("textarea");
-    textArea.value = text;
-    
-    // 确保在移动端不会触发页面滚动或跳动
-    textArea.style.position = "fixed";
-    textArea.style.left = "-9999px";
-    textArea.style.top = "0";
-    textArea.style.opacity = "0";
-    document.body.appendChild(textArea);
-    
-    // 针对 iOS 的特殊处理
-    const isiOS = navigator.userAgent.match(/ipad|iphone/i);
-    if (isiOS) {
-      const range = document.createRange();
-      range.selectNodeContents(textArea);
-      const selection = window.getSelection();
-      selection?.removeAllRanges();
-      selection?.addRange(range);
-      textArea.setSelectionRange(0, 999999);
-    } else {
-      textArea.select();
-    }
-
-    try {
-      const successful = document.execCommand('copy');
-      if (successful) {
-        setIsCopied(true);
-        setTimeout(() => setIsCopied(false), 2000);
-      }
-    } catch (err) {
-      console.error('Fallback复制失败', err);
-    }
-    
-    document.body.removeChild(textArea);
-  };
 
   const t = (zh: string, en: string) => (state.language === 'zh' ? zh : en);
 
@@ -287,7 +250,8 @@ const App: React.FC = () => {
                       <span className="text-[10px] font-black tracking-widest">{isCopied ? t('已复制', 'COPIED') : t('复制', 'COPY')}</span>
                     </button>
                     <p className="text-sm leading-relaxed text-slate-300 font-serif italic whitespace-pre-wrap pr-8">
-                      {state.aiInsight}
+                      {/* 这里对渲染内容进行处理，隐藏 think 标签 */}
+                      {formatInsight(state.aiInsight)}
                     </p>
                   </div>
                 )}
