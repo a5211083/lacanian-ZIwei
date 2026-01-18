@@ -48,7 +48,7 @@ export async function getDetailedAnalysis(
       return await callGLMApi(prompt, targetLang, glm);
     } catch (glmError) {
       console.error("GLM调用也失败：", glmError);
-      return "解析发生错误，请稍后重试。";
+      return "解析发生错误，请稍后重试……";
     }
   }
 }
