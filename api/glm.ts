@@ -4,9 +4,24 @@ export const config = {
 };
 
 export default async function handler(req: Request) {
-  // 1. 仅允许 POST
+  // === 1. 定义 CORS 头部 (解决跨域问题) ===
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*', // 允许所有域名访问，生产环境建议换成你的前端域名
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+
+  // === 2. 处理 OPTIONS 预检请求 ===
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }
+
+  // === 3. 仅允许 POST，其他方法报错 ===
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: '只允许 POST 请求' }), { status: 405 });
+    return new Response(JSON.stringify({ error: '只允许 POST 请求' }), { 
+      status: 405, 
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+    });
   }
 
   try {
@@ -14,17 +29,21 @@ export default async function handler(req: Request) {
     const { prompt } = body;
 
     if (!prompt) {
-      return new Response(JSON.stringify({ error: '缺少 prompt 参数' }), { status: 400 });
+      return new Response(JSON.stringify({ error: '缺少 prompt 参数' }), { 
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
-    // 2. 检查环境变量 (建议在 Vercel 后台改名为 SILICON_FLOW_KEY，或者沿用旧名) 这里的变量值请填写你在 siliconflow.cn 申请的 API Key
     const apiKey = process.env.GLM_API_KEY; 
     if (!apiKey) {
-      return new Response(JSON.stringify({ error: '服务器未配置 API Key' }), { status: 500 });
+      return new Response(JSON.stringify({ error: '服务器未配置 API Key' }), { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
-    // 3. 发起请求 (切换到硅基流动 API)
-    // 免费模型推荐：deepseek-ai/DeepSeek-V3 或 Qwen/Qwen2.5-72B-Instruct
+    // 发起请求到硅基流动
     const response = await fetch("https://api.siliconflow.cn/v1/chat/completions", {
       method: 'POST',
       headers: {
@@ -32,7 +51,7 @@ export default async function handler(req: Request) {
         "Authorization": `Bearer ${apiKey.trim()}`
       },
       body: JSON.stringify({
-        model: "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B", // 这里是目前免费最强的模型 Qwen/Qwen2-7B-Instruct  THUDM/GLM-Z1-9B-0414  deepseek-ai/DeepSeek-R1-Distill-Qwen-7B
+        model: "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B", 
         messages: [{ role: "user", content: prompt }],
         temperature: 0.7,
         max_tokens: 1024,
@@ -40,34 +59,35 @@ export default async function handler(req: Request) {
       })
     });
 
-    // 4. 捕获错误反馈
     if (!response.ok) {
       const errorDetail = await response.text();
       console.error(`硅基流动 API 报错: ${response.status}`, errorDetail);
       return new Response(JSON.stringify({ 
         error: `硅基流动 AI 平台返回错误 (${response.status})`, 
         detail: errorDetail 
-      }), { status: response.status });
+      }), { 
+        status: response.status,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
-    // const data = await response.json();
+    // === 4. 返回流式响应 ===
+    // 注意：这里必须带上 CORS 头部，否则前端收不到数据
     return new Response(response.body, {
       headers: {
+        ...corsHeaders,
         "Content-Type": "text/event-stream; charset=utf-8",
         "Cache-Control": "no-cache",
         "Connection": "keep-alive",
-        "X-Accel-Buffering": "no" // 禁止 Vercel/Nginx 缓冲数据
+        "X-Accel-Buffering": "no"
       },
-    });
-    
-    // 5. 统一输出格式 (兼容你原来的前端逻辑)
-    return new Response(JSON.stringify(data), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
     });
 
   } catch (err: any) {
     console.error("Vercel Edge 内部错误:", err);
-    return new Response(JSON.stringify({ error: '服务器内部错误', message: err.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: '服务器内部错误', message: err.message }), { 
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
   }
 }
