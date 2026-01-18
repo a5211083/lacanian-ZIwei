@@ -16,7 +16,7 @@ export enum StarCategory {
 export enum GlmEnv {
   GLM_API_KEY = 'bc97425c17324342bb3a9b86af24d529',
   GLM_API_URL =  "https://open.bigmodel.ai/api/paas/v4/chat/completions",
-  API_TIMEOUT_MS =  "3000000",       // 杂曜
+  API_TIMEOUT_MS =  "3000000", 
   CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC = 1
 }
 
