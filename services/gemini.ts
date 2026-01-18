@@ -35,7 +35,7 @@ export async function getDetailedAnalysis(
 
   // 优先调用Google AI
   try {
-    const ai = new GoogleGenAI({ apiKey: glm.name[API_KEY] });
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
       contents: prompt,
