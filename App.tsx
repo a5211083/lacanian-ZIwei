@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { STAR_DATA, PALACE_DATA, TRANSFORMATION_DATA } from './data';
 import { AnalysisState, StarMapping, Language, AnalysisStyle, ChartPalace, Palace, Transformation, StarCategory, LacanRealm } from './types';
@@ -6,10 +7,18 @@ import VisualChart from './components/VisualChart';
 import { generateZwdsChart, BaziInfo } from './services/zwds_engine';
 import { getDetailedAnalysis } from './services/gemini';
 
+const STYLE_OPTIONS: { id: AnalysisStyle; label: { zh: string; en: string } }[] = [
+  { id: 'Lacanian', label: { zh: '拉康拓扑', en: 'Lacanian' } },
+  { id: 'Classic', label: { zh: '经典命理', en: 'Classic' } },
+  { id: 'Semiotics', label: { zh: '符号解构', en: 'Semiotics' } },
+  { id: 'Pictographic', label: { zh: '象形原型', en: 'Pictogram' } },
+];
+
 const App: React.FC = () => {
   const [chart, setChart] = useState<ChartPalace[]>([]);
   const [viewMode, setViewMode] = useState<'GRID' | 'TOPOLOGY'>('GRID');
   const [isCopied, setIsCopied] = useState(false);
+  const [showStyleMenu, setShowStyleMenu] = useState(false);
   
   const [state, setState] = useState<AnalysisState>({
     selectedStar: null,
@@ -23,7 +32,6 @@ const App: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<StarCategory>(StarCategory.MAIN);
 
-  // 辅助函数：过滤掉 <think> 标签及其内容
   const formatInsight = (text: string | null) => {
     if (!text) return '';
     return text.replace(/[\s\S]*?<\/think>/g, '').trim();
@@ -82,8 +90,6 @@ const App: React.FC = () => {
 
   const handleCopy = useCallback(async () => {
     if (!state.aiInsight) return;
-    
-    // 复制时同样过滤掉 <think> 内容
     const cleanText = formatInsight(state.aiInsight);
 
     if (navigator.clipboard && window.isSecureContext) {
@@ -93,50 +99,19 @@ const App: React.FC = () => {
         setTimeout(() => setIsCopied(false), 2000);
         return;
       } catch (err) {
-        console.warn("Clipboard API 失败，尝试回退方案");
+        console.warn("Clipboard API failed");
       }
     }
 
     const textArea = document.createElement("textarea");
     textArea.value = cleanText;
-    textArea.readOnly = true;
-    // @ts-ignore
-    textArea.inputMode = 'none';
-    textArea.style.position = "fixed";
-    textArea.style.left = "-9999px";
-    textArea.style.top = `${window.scrollY}px`;
-    textArea.style.width = "2em";
-    textArea.style.height = "2em";
-    textArea.style.padding = "0";
-    textArea.style.border = "none";
-    textArea.style.outline = "none";
-    textArea.style.boxShadow = "none";
-    textArea.style.background = "transparent";
-
     document.body.appendChild(textArea);
-
-    const isiOS = navigator.userAgent.match(/ipad|iphone/i);
-    if (isiOS) {
-      const range = document.createRange();
-      range.selectNodeContents(textArea);
-      const selection = window.getSelection();
-      selection?.removeAllRanges();
-      selection?.addRange(range);
-      textArea.setSelectionRange(0, 999999);
-    } else {
-      textArea.select();
-    }
-
+    textArea.select();
     try {
-      const successful = document.execCommand('copy');
-      if (successful) {
-        setIsCopied(true);
-        setTimeout(() => setIsCopied(false), 2000);
-      }
-    } catch (err) {
-      console.error('复制失败', err);
-    }
-
+      document.execCommand('copy');
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (err) {}
     document.body.removeChild(textArea);
   }, [state.aiInsight]);
 
@@ -148,6 +123,37 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 p-4 md:p-8 flex flex-col items-center selection:bg-indigo-500/30">
+      {/* Top Right Settings Overlay */}
+      <div className="fixed top-6 right-6 z-50 flex flex-col items-end gap-2">
+        <button 
+          onClick={() => setShowStyleMenu(!showStyleMenu)}
+          className={`px-4 py-2 rounded-xl border flex items-center gap-3 transition-all backdrop-blur-md ${showStyleMenu ? 'bg-indigo-600 border-indigo-400 shadow-lg' : 'bg-slate-900/60 border-slate-800 hover:border-slate-600'}`}
+        >
+          <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></div>
+          <span className="text-[10px] font-black uppercase tracking-[0.2em]">
+            {t('分析视角', 'Analysis Lens')}: {STYLE_OPTIONS.find(o => o.id === state.style)?.label[state.language]}
+          </span>
+          <svg className={`w-3 h-3 transition-transform ${showStyleMenu ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+        </button>
+
+        {showStyleMenu && (
+          <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-2 shadow-2xl backdrop-blur-xl animate-in slide-in-from-top-2 fade-in duration-200 w-48 overflow-hidden">
+            {STYLE_OPTIONS.map((opt) => (
+              <button
+                key={opt.id}
+                onClick={() => {
+                  setState(prev => ({ ...prev, style: opt.id, aiInsight: null }));
+                  setShowStyleMenu(false);
+                }}
+                className={`w-full text-left px-4 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${state.style === opt.id ? 'bg-indigo-600/20 text-indigo-400 border border-indigo-500/30' : 'text-slate-500 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'}`}
+              >
+                {opt.label[state.language]}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
       <header className="w-full max-w-7xl mb-12 flex flex-col items-center gap-8">
         <div className="text-center">
           <h1 className="text-5xl md:text-6xl font-black bg-gradient-to-br from-indigo-300 via-purple-400 to-rose-400 bg-clip-text text-transparent italic leading-tight uppercase tracking-tighter">
@@ -197,7 +203,9 @@ const App: React.FC = () => {
                     <h2 className="text-5xl md:text-6xl font-black mb-2 flex items-baseline gap-4 tracking-tighter" style={{ color: state.selectedStar.color }}>
                       {state.selectedStar.name[state.language]}
                     </h2>
-                    <p className="text-xs text-indigo-400 font-black uppercase tracking-[0.4em] mt-2">{state.selectedStar.lacanConcept[state.language]}</p>
+                    <p className="text-xs text-indigo-400 font-black uppercase tracking-[0.4em] mt-2">
+                      {state.style === 'Lacanian' ? state.selectedStar.lacanConcept[state.language] : t('当前视角解析中', 'Contextual Analysis')}
+                    </p>
                   </div>
                   <div className={`px-4 py-1.5 rounded-full text-[9px] font-black border uppercase tracking-widest ${
                     state.selectedStar.realm === LacanRealm.REAL ? 'text-rose-500 border-rose-500/30 bg-rose-500/5' :
@@ -237,11 +245,14 @@ const App: React.FC = () => {
                 </div>
 
                 <button onClick={executeAnalysis} disabled={state.loading} className="w-full py-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-rose-600 rounded-[2.5rem] font-black text-[11px] tracking-[0.5em] uppercase hover:brightness-110 active:scale-[0.98] transition-all shadow-2xl shadow-indigo-900/30">
-                  {state.loading ? t('能指结构生成中...', 'DECODING RSI STRUCTURE...') : t('执行拓扑深度了解', 'EXECUTE ANALYSIS')}
+                  {state.loading ? t('结构解码中...', 'DECODING STRUCTURE...') : t('执行深度解析', 'EXECUTE ANALYSIS')}
                 </button>
 
                 {state.aiInsight && (
                   <div className="bg-slate-950/60 p-8 rounded-[3rem] border border-indigo-500/10 animate-in zoom-in-95 backdrop-blur-md relative group/insight">
+                    <div className="absolute -top-3 left-8 px-3 py-1 bg-indigo-600 rounded-full text-[8px] font-black tracking-widest text-white uppercase shadow-lg">
+                      {STYLE_OPTIONS.find(o => o.id === state.style)?.label[state.language]} {t('视角', 'LENS')}
+                    </div>
                     <button 
                       onClick={handleCopy}
                       className={`absolute top-4 right-4 p-2 rounded-xl border border-slate-800 transition-all opacity-0 group-hover/insight:opacity-100 hover:border-indigo-500 active:scale-90 flex items-center gap-2 ${isCopied ? 'bg-indigo-600 border-indigo-500 text-white opacity-100' : 'bg-slate-900 text-slate-400'}`}
@@ -250,7 +261,6 @@ const App: React.FC = () => {
                       <span className="text-[10px] font-black tracking-widest">{isCopied ? t('已复制', 'COPIED') : t('复制', 'COPY')}</span>
                     </button>
                     <p className="text-sm leading-relaxed text-slate-300 font-serif italic whitespace-pre-wrap pr-8">
-                      {/* 这里对渲染内容进行处理，隐藏 think 标签 */}
                       {formatInsight(state.aiInsight)}
                     </p>
                   </div>
@@ -265,7 +275,7 @@ const App: React.FC = () => {
                   </div>
                 </div>
                 <p className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-400 max-w-[250px] leading-relaxed">
-                  {t('点击命盘中的星曜能指\n开始拉康拓扑解码', 'SELECT A SIGNIFIER TO DECODE ITS TOPOLOGICAL STRUCTURE')}
+                  {t('点击命盘中的星曜能指\n开始解码之旅', 'SELECT A SIGNIFIER TO START THE JOURNEY')}
                 </p>
               </div>
             )}
