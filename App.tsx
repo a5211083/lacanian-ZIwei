@@ -60,16 +60,20 @@ const App: React.FC = () => {
 
   const executeAnalysis = async () => {
     if (!state.selectedStar) return;
-    setState(prev => ({ ...prev, loading: true }));
+    // 立即清除旧解析并进入加载态
+    setState(prev => ({ ...prev, loading: true, aiInsight: "" }));
     try {
-      const insight = await getDetailedAnalysis(
+      await getDetailedAnalysis(
         state.selectedStar, 
         state.selectedPalace, 
         state.selectedTrans, 
         state.language, 
-        state.style
+        state.style,
+        (currentText) => {
+          setState(prev => ({ ...prev, aiInsight: currentText }));
+        }
       );
-      setState(prev => ({ ...prev, aiInsight: insight, loading: false }));
+      setState(prev => ({ ...prev, loading: false }));
     } catch {
       setState(prev => ({ ...prev, aiInsight: "Analysis failed. Please check your API configuration.", loading: false }));
     }
@@ -183,7 +187,7 @@ const App: React.FC = () => {
                   {state.loading ? t('能指结构生成中...', 'DECODING RSI STRUCTURE...') : t('执行拓扑深度了解', 'EXECUTE ANALYSIS')}
                 </button>
 
-                {state.aiInsight && (
+                {state.aiInsight !== null && (
                   <div className="bg-slate-950/60 p-8 rounded-[3rem] border border-indigo-500/10 animate-in zoom-in-95 backdrop-blur-md relative group/insight">
                     <button 
                       onClick={handleCopy}
@@ -193,7 +197,7 @@ const App: React.FC = () => {
                       <span className="text-[10px] font-black tracking-widest">{isCopied ? t('已复制', 'COPIED') : t('复制', 'COPY')}</span>
                     </button>
                     <p className="text-sm leading-relaxed text-slate-300 font-serif italic whitespace-pre-wrap pr-8">
-                      {state.aiInsight}
+                      {state.aiInsight || (state.loading && "...")}
                     </p>
                   </div>
                 )}
