@@ -76,12 +76,62 @@ const App: React.FC = () => {
   };
 
   const handleCopy = useCallback(() => {
-    if (!state.aiInsight) return;
-    navigator.clipboard.writeText(state.aiInsight).then(() => {
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
-    });
-  }, [state.aiInsight]);
+  if (!state.aiInsight) return;
+
+  // 尝试使用现代 API
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(state.aiInsight)
+      .then(() => {
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+      })
+      .catch(() => {
+        // 如果现代 API 失败，尝试回退方案
+        fallbackCopyText(state.aiInsight);
+      });
+  } else {
+    // 环境不支持现代 API，直接使用回退方案
+    fallbackCopyText(state.aiInsight);
+  }
+}, [state.aiInsight]);
+
+  // 兼容性回退函数：手动创建一个不可见的输入框进行复制
+  const fallbackCopyText = (text: string) => {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    
+    // 确保在移动端不会触发页面滚动或跳动
+    textArea.style.position = "fixed";
+    textArea.style.left = "-9999px";
+    textArea.style.top = "0";
+    textArea.style.opacity = "0";
+    document.body.appendChild(textArea);
+    
+    // 针对 iOS 的特殊处理
+    const isiOS = navigator.userAgent.match(/ipad|iphone/i);
+    if (isiOS) {
+      const range = document.createRange();
+      range.selectNodeContents(textArea);
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+      textArea.setSelectionRange(0, 999999);
+    } else {
+      textArea.select();
+    }
+
+    try {
+      const successful = document.execCommand('copy');
+      if (successful) {
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+      }
+    } catch (err) {
+      console.error('Fallback复制失败', err);
+    }
+    
+    document.body.removeChild(textArea);
+  };
 
   const t = (zh: string, en: string) => (state.language === 'zh' ? zh : en);
 
