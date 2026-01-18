@@ -67,6 +67,7 @@ async function callGLMApi(prompt: string, targetLang: string, glmEnv: GlmEnv | s
   } catch (e) {
     throw new Error("GLM 配置解析失败");
   }
+  console.log(glmConfigs)
 
   const glmApiKey = glmConfigs["GLM_API_KEY"];
   const glmApiUrl = glmConfigs["GLM_API_URL"] || "https://open.bigmodel.cn/api/paas/v4/chat/completions";
@@ -82,8 +83,6 @@ async function callGLMApi(prompt: string, targetLang: string, glmEnv: GlmEnv | s
   const requestData = {
     model: "glm-4.5-flash",
     messages: [{ role: "user", content: prompt }],
-    temperature: 0.7,
-    max_tokens: 500,
     top_p: 0.9,
     stream: false
   };
