@@ -80,7 +80,7 @@ async function callGLMApi(prompt: string, targetLang: string, glmEnv: GlmEnv | s
   const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
 
   const requestData = {
-    model: "glm-4",
+    model: "glm-4.5-flash",
     messages: [{ role: "user", content: prompt }],
     temperature: 0.7,
     max_tokens: 500,
