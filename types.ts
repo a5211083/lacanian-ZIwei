@@ -13,6 +13,13 @@ export enum StarCategory {
   TRANSFORMATION = 'TRANSFORMATION'
 }
 
+export enum GlmEnv {
+  GLM_API_KEY = 'bc97425c17324342bb3a9b86af24d529',
+  GLM_API_URL =  "https://open.bigmodel.ai/api/paas/v4/chat/completions",
+  API_TIMEOUT_MS =  "3000000",       // 杂曜
+  CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC = 1
+}
+
 export type Language = 'zh' | 'en';
 export type AnalysisStyle = 'Lacanian' | 'Classic' | 'Semiotics' | 'Pictographic';
 
@@ -76,11 +83,4 @@ export interface Transformation {
   concept: LocalizedString;
 }
 
-export interface GlmEnv {
-  id: string;
-  GLM_API_KEY: "bc97425c17324342bb3a9b86af24d529.xKXlIZBKWjTghYPv";
-  GLM_API_URL: "https://open.bigmodel.ai/api/paas/v4/chat/completions",
-  ANTHROPIC_BASE_URL: "https://open.bigmodel.cn/api/anthropic",
-  API_TIMEOUT_MS: "3000000",
-  CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: 1
-}
+
