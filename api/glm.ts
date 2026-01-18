@@ -17,8 +17,7 @@ export default async function handler(req: Request) {
       return new Response(JSON.stringify({ error: '缺少 prompt 参数' }), { status: 400 });
     }
 
-    // 2. 检查环境变量 (建议在 Vercel 后台改名为 SILICON_FLOW_KEY，或者沿用旧名)
-    // 这里的变量值请填写你在 siliconflow.cn 申请的 API Key
+    // 2. 检查环境变量 (建议在 Vercel 后台改名为 SILICON_FLOW_KEY，或者沿用旧名) 这里的变量值请填写你在 siliconflow.cn 申请的 API Key
     const apiKey = process.env.GLM_API_KEY; 
     if (!apiKey) {
       return new Response(JSON.stringify({ error: '服务器未配置 API Key' }), { status: 500 });
