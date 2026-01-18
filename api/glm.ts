@@ -50,7 +50,7 @@ export default async function handler(req: Request) {
       }), { status: response.status });
     }
 
-    // Fix: Directly return the streaming response body and remove unreachable redundant code causing 'data' undefined error
+    // const data = await response.json();
     return new Response(response.body, {
       headers: {
         "Content-Type": "text/event-stream; charset=utf-8",
@@ -58,6 +58,12 @@ export default async function handler(req: Request) {
         "Connection": "keep-alive",
         "X-Accel-Buffering": "no" // 禁止 Vercel/Nginx 缓冲数据
       },
+    });
+    
+    // 5. 统一输出格式 (兼容你原来的前端逻辑)
+    return new Response(JSON.stringify(data), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
     });
 
   } catch (err: any) {
