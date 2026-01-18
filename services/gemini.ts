@@ -64,7 +64,7 @@ async function callGLMApi(prompt: string, targetLang: string, glmstring: string)
   const glm = JSON.parse(glmstring);
 
   const glmApiKey = glm["GLM_API_KEY"];
-  const glmApiUrl = glm["ANTHROPIC_BASE_URL"] || "https://open.bigmodel.cn/api/paas/v4/chat/completions";
+  const glmApiUrl = glm["GLM_API_URL"] || "https://open.bigmodel.cn/api/paas/v4/chat/completions";
 
   if (!glmApiKey) {
     throw new Error("GLM API密钥未配置");
