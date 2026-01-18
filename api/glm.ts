@@ -45,7 +45,7 @@ export default async function handler(req: Request) {
       const errorDetail = await response.text();
       console.error(`硅基流动 API 报错: ${response.status}`, errorDetail);
       return new Response(JSON.stringify({ 
-        error: `AI 平台返回错误 (${response.status})`, 
+        error: `硅基流动 AI 平台返回错误 (${response.status})`, 
         detail: errorDetail 
       }), { status: response.status });
     }

@@ -41,7 +41,7 @@ export async function getDetailedAnalysis(
     });
     return response.text || "无法生成解析。";
   } catch (error) {
-    console.warn("Google AI 调用失败，尝试通过 Vercel 路由调用 GLM...");
+    console.warn("Google AI 调用失败，尝试通过 Vercel 路由调用备用AI...");
 
     // 2. Google 失败时，请求我们自己的 Vercel API 路由
     // 前端 fetch 部分修改建议
