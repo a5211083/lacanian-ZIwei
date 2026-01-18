@@ -68,3 +68,19 @@ export interface AnalysisState {
   aiInsight: string | null;
   language: Language;
 }
+
+export interface Transformation {
+  id: string;
+  name: LocalizedString;
+  color: string;
+  concept: LocalizedString;
+}
+
+export interface GlmEnv {
+  id: string;
+  GLM_API_KEY: "bc97425c17324342bb3a9b86af24d529.xKXlIZBKWjTghYPv";
+  GLM_API_URL: string;
+  ANTHROPIC_BASE_URL: "https://open.bigmodel.cn/api/anthropic",
+  API_TIMEOUT_MS: "3000000",
+  CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: 1
+}
