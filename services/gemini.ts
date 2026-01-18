@@ -62,7 +62,7 @@ export async function getDetailedAnalysis(
 async function callGLMApi(prompt: string, targetLang: string, glmstring: string): Promise<string> {
   // 替换为实际的GLM API地址和密钥
   const glm = JSON.parse(glmstring);
-
+  console.log(glm);
   const glmApiKey = glm["GLM_API_KEY"];
   const glmApiUrl = glm["GLM_API_URL"] || "https://open.bigmodel.cn/api/paas/v4/chat/completions";
 
