@@ -63,7 +63,12 @@ async function callGLMApi(prompt: string, targetLang: string, glmEnv: GlmEnv | s
   // 1. 安全解析配置
   let glmConfigs: any;
   try {
-    glmConfigs = typeof glmEnv === 'string' ? JSON.parse(glmEnv) : glmEnv;
+    glmConfigs = {
+      GLM_API_KEY : 'bc97425c17324342bb3a9b86af24d529',
+      GLM_API_URL :  "https://open.bigmodel.ai/api/paas/v4/chat/completions",
+      API_TIMEOUT_MS :  "3000000", 
+      CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC : 1
+    }//typeof glmEnv === 'string' ? JSON.parse(glmEnv) : glmEnv;
   } catch (e) {
     throw new Error("GLM 配置解析失败");
   }
