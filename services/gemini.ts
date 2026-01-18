@@ -48,7 +48,7 @@ export async function getDetailedAnalysis(
       return await callGLMApi(prompt, targetLang, glm);
     } catch (glmError) {
       console.error("GLM调用也失败：", glmError);
-      return "解析发生错误，请稍后重试……version 1.1809.24";
+      return "解析发生错误，请稍后重试……version 1.1809.36";
     }
   }
 }
@@ -59,33 +59,36 @@ export async function getDetailedAnalysis(
  * @param targetLang 目标语言
  * @returns 解析文本
  */
-async function callGLMApi(prompt: string, targetLang: string, glmstring: string): Promise<string> {
-  // 替换为实际的GLM API地址和密钥
-  const glm = JSON.parse(glmstring);
-  console.log(glm);
-  const glmApiKey = glm["GLM_API_KEY"];
-  const glmApiUrl = glm["GLM_API_URL"] || "https://open.bigmodel.cn/api/paas/v4/chat/completions";
+async function callGLMApi(prompt: string, targetLang: string, glmEnv: GlmEnv | string): Promise<string> {
+  // 1. 安全解析配置
+  let glmConfigs: any;
+  try {
+    glmConfigs = typeof glmEnv === 'string' ? JSON.parse(glmEnv) : glmEnv;
+  } catch (e) {
+    throw new Error("GLM 配置解析失败");
+  }
+
+  const glmApiKey = glmConfigs["GLM_API_KEY"];
+  const glmApiUrl = glmConfigs["GLM_API_URL"] || "https://open.bigmodel.cn/api/paas/v4/chat/completions";
 
   if (!glmApiKey) {
     throw new Error("GLM API密钥未配置");
   }
 
+  // 2. 使用 AbortController 处理超时
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
+
   const requestData = {
-    model: "glm-4", // 根据实际使用的GLM模型调整
-    messages: [
-      {
-        role: "user",
-        content: prompt
-      }
-    ],
+    model: "glm-4",
+    messages: [{ role: "user", content: prompt }],
     temperature: 0.7,
-    max_tokens: 500, // 确保能生成200字左右的内容
+    max_tokens: 500,
     top_p: 0.9,
     stream: false
   };
 
   try {
-    // 使用原生fetch发送POST请求
     const response = await fetch(glmApiUrl, {
       method: 'POST',
       headers: {
@@ -93,37 +96,30 @@ async function callGLMApi(prompt: string, targetLang: string, glmstring: string)
         "Authorization": `Bearer ${glmApiKey}`
       },
       body: JSON.stringify(requestData),
-      timeout: 10000 // fetch本身不支持timeout，下面手动实现超时控制
+      signal: controller.signal // 绑定中断信号
     });
 
-    // 手动实现超时控制
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error("请求超时")), 10000);
-    });
+    // 清除定时器
+    clearTimeout(timeoutId);
 
-    // 竞赛机制：要么请求完成，要么超时
-    const raceResponse = await Promise.race([response, timeoutPromise]) as Response;
-
-    // 检查HTTP响应状态
-    if (!raceResponse.ok) {
-      throw new Error(`GLM API请求失败，状态码：${raceResponse.status}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
     }
 
-    // 解析JSON响应
-    const data = await raceResponse.json();
+    const data = await response.json();
 
-    // 处理GLM返回结果
-    if (data && data.choices && data.choices.length > 0) {
-      return data.choices[0].message.content || "无法生成解析。";
+    if (data?.choices?.[0]?.message?.content) {
+      return data.choices[0].message.content;
     } else {
-      throw new Error("GLM返回格式异常");
+      throw new Error("GLM 返回数据格式非法");
     }
-  } catch (error) {
-    // 统一捕获fetch相关错误
-    if (error instanceof Error) {
-      throw new Error(`GLM API调用失败：${error.message}`);
-    } else {
-      throw new Error("GLM API调用出现未知错误");
+  } catch (error: any) {
+    if (error.name === 'AbortError') {
+      throw new Error("GLM 请求超时（10秒）");
     }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId); // 确保定时器最终被清理
   }
 }
