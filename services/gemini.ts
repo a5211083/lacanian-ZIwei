@@ -34,15 +34,15 @@ export async function getDetailedAnalysis(
   `;
 
   // 优先调用Google AI apiKey: process.env.API_KEY
-  // try {
-  //   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  //   const response = await ai.models.generateContent({
-  //     model: 'gemini-3-pro-preview',
-  //     contents: prompt,
-  //   });
-  //   return response.text || "无法生成解析。";
-  // } catch (googleError) {
-    // console.error("Google AI调用失败，切换至GLM：", googleError);
+  try {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-pro-preview',
+      contents: prompt,
+    });
+    return response.text || "无法生成解析。";
+  } catch (googleError) {
+    console.error("Google AI调用失败，切换至GLM：", googleError);
     // Google AI失败时，调用GLM
     try {
       return await callGLMApi(prompt, targetLang, glm);
@@ -50,7 +50,7 @@ export async function getDetailedAnalysis(
       console.error("GLM调用也失败：", glmError);
       return "解析发生错误，请稍后重试……version 1.1809.36，"+glm["GLM_API_URL"];
     }
-  // }
+  }
 }
 
 /**
