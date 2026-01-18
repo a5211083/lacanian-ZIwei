@@ -1,15 +1,18 @@
 import { GoogleGenAI } from "@google/genai";
 import { StarMapping, Language, AnalysisStyle, Palace, Transformation } from "../types";
-import * as Iztro from 'iztro';
 
+/**
+ * 获取深度解析报告
+ * @param onStream 可选回调，用于实现打字机流式效果
+ */
 export async function getDetailedAnalysis(
   star: StarMapping, 
   palace: Palace | null,
   trans: Transformation | null,
   lang: Language = 'zh', 
-  style: AnalysisStyle = 'Lacanian'
+  style: AnalysisStyle = 'Lacanian',
+  onStream?: (text: string) => void // 新增：流式输出回调
 ): Promise<string> {
-  // 保留你原来的 Google 配置
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
   const targetLang = lang === 'zh' ? 'Chinese' : 'English';
 
@@ -33,35 +36,70 @@ export async function getDetailedAnalysis(
     请使用${targetLang}回答。
   `;
 
-  // 1. 优先调用 Google AI (保持你的原样)
+  // 1. 优先调用 Google AI (保持原样)
   try {
     const response = await (ai as any).models.generateContent({
       model: 'gemini-3-pro-preview',
       contents: prompt,
     });
-    return response.text || "无法生成解析。";
+    const text = response.text || "无法生成解析。";
+    if (onStream) onStream(text); // 如果 Google 成功，直接一次性回调
+    return text;
   } catch (error) {
-    console.warn("Google AI 调用失败，尝试通过 Vercel 路由调用备用AI...");
+    console.warn("Google AI 调用失败，尝试通过 Vercel 路由调用备用流式 AI...");
 
-    // 2. Google 失败时，请求我们自己的 Vercel API 路由
-    // 前端 fetch 部分修改建议
+    // 2. Fallback: 调用 Vercel /api/glm (流式解析)
     try {
-      const glmResponse = await fetch('/api/glm', {
+      const response = await fetch('/api/glm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt })
       });
 
-      const result = await glmResponse.json();
-
-      if (!glmResponse.ok) {
-        // 这样你会看到具体的错误原因，比如 "API Key 格式不对" 之类的
-        const errorMsg = `GLM 失败: ${result.error || '未知错误'}. ${result.detail || ''}`;
+      if (!response.ok) {
+        const errorMsg = `API 失败: ${response.status}`;
         console.error(errorMsg);
-        return errorMsg; 
+        return errorMsg;
       }
 
-      return result.choices[0].message.content;
+      // 处理 ReadableStream
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let fullText = "";
+
+      if (!reader) throw new Error("无法读取响应流");
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        // SSE 格式通常以 "data: " 开头
+        const lines = chunk.split("\n");
+        
+        for (const line of lines) {
+          const trimmedLine = line.trim();
+          if (!trimmedLine || trimmedLine === "data: [DONE]") continue;
+          
+          if (trimmedLine.startsWith("data: ")) {
+            try {
+              const json = JSON.parse(trimmedLine.slice(6));
+              // 兼容 SiliconFlow/OpenAI 的流式格式: choices[0].delta.content
+              const content = json.choices[0]?.delta?.content || "";
+              
+              // 如果你需要看到 DeepSeek R1 的思考过程，可以加上这行：
+              // const reasoning = json.choices[0]?.delta?.reasoning_content || "";
+              
+              fullText += content;
+              if (onStream) onStream(fullText); // 实时触发回调，UI 会即时更新
+            } catch (e) {
+              // 忽略不完整的 JSON 块
+            }
+          }
+        }
+      }
+
+      return fullText;
     } catch (e: any) {
       return "网络连接失败或后端接口崩溃: " + e.message;
     }

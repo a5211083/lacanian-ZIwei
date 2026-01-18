@@ -50,7 +50,15 @@ export default async function handler(req: Request) {
       }), { status: response.status });
     }
 
-    const data = await response.json();
+    // const data = await response.json();
+    return new Response(response.body, {
+      headers: {
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
+        "X-Accel-Buffering": "no" // 禁止 Vercel/Nginx 缓冲数据
+      },
+    });
     
     // 5. 统一输出格式 (兼容你原来的前端逻辑)
     return new Response(JSON.stringify(data), {
