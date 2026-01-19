@@ -3,13 +3,14 @@ import { LacanRealm, StarMapping, StarCategory } from './types';
 
 export const STAR_DATA: StarMapping[] = [
   // --- 甲级星 (GRADE_A: 32 Stars) ---
+  // 四化逻辑修正：严格遵循斗数标准
   { id: 'ziwei', name: { zh: '紫微', en: 'Zi Wei' }, pinyin: 'Zi Wei', category: StarCategory.GRADE_A, realm: LacanRealm.SYMBOLIC, lacanConcept: { zh: '大它者', en: 'The Big Other' }, description: { zh: '象征秩序的核心。', en: 'Core of Symbolic order.' }, traditionalMeaning: { zh: '帝座。', en: 'Emperor.' }, color: '#a855f7', canTransform: { quan: true, ke: true } },
   { id: 'tianji', name: { zh: '天机', en: 'Tian Ji' }, pinyin: 'Tian Ji', category: StarCategory.GRADE_A, realm: LacanRealm.SYMBOLIC, lacanConcept: { zh: '能指链滑动', en: 'Sliding Signifier' }, description: { zh: '逻辑流转。', en: 'Flow of logic.' }, traditionalMeaning: { zh: '智多星。', en: 'Strategist.' }, color: '#3b82f6', canTransform: { lu: true, quan: true, ke: true, ji: true } },
-  { id: 'taiyang', name: { zh: '太阳', en: 'Tai Yang' }, pinyin: 'Tai Yang', category: StarCategory.GRADE_A, realm: LacanRealm.IMAGINARY, lacanConcept: { zh: '理想自我', en: 'Ideal-Ego' }, description: { zh: '完美映像。', en: 'Ideal mirror image.' }, traditionalMeaning: { zh: '光明。', en: 'Light.' }, color: '#fbbf24', canTransform: { lu: true, quan: true, ke: true, ji: true } },
+  { id: 'taiyang', name: { zh: '太阳', en: 'Tai Yang' }, pinyin: 'Tai Yang', category: StarCategory.GRADE_A, realm: LacanRealm.IMAGINARY, lacanConcept: { zh: '理想自我', en: 'Ideal-Ego' }, description: { zh: '完美映像。', en: 'Ideal mirror image.' }, traditionalMeaning: { zh: '光明。', en: 'Light.' }, color: '#fbbf24', canTransform: { lu: true, quan: true, ji: true } },
   { id: 'wuqu', name: { zh: '武曲', en: 'Wu Qu' }, pinyin: 'Wu Qu', category: StarCategory.GRADE_A, realm: LacanRealm.IMAGINARY, lacanConcept: { zh: '想象防御', en: 'Imaginary Defense' }, description: { zh: '物质执着。', en: 'Material obsession.' }, traditionalMeaning: { zh: '财星。', en: 'Finance.' }, color: '#94a3b8', canTransform: { lu: true, quan: true, ke: true, ji: true } },
   { id: 'tiantong', name: { zh: '天同', en: 'Tian Tong' }, pinyin: 'Tian Tong', category: StarCategory.GRADE_A, realm: LacanRealm.IMAGINARY, lacanConcept: { zh: '原初享乐', en: 'Original Jouissance' }, description: { zh: '退行渴望。', en: 'Regressive desire.' }, traditionalMeaning: { zh: '福星。', en: 'Fortune.' }, color: '#2dd4bf', canTransform: { lu: true, quan: true, ji: true } },
   { id: 'lianzhen', name: { zh: '廉贞', en: 'Lian Zhen' }, pinyin: 'Lian Zhen', category: StarCategory.GRADE_A, realm: LacanRealm.SYMBOLIC, lacanConcept: { zh: '欲望与禁忌', en: 'Desire and Taboo' }, description: { zh: '超我约束。', en: 'Superego constraint.' }, traditionalMeaning: { zh: '囚星。', en: 'Prison.' }, color: '#ef4444', canTransform: { lu: true, ji: true } },
-  { id: 'tianfu', name: { zh: '天府', en: 'Tian Fu' }, pinyin: 'Tian Fu', category: StarCategory.GRADE_A, realm: LacanRealm.IMAGINARY, lacanConcept: { zh: '自我容器', en: 'Container of Ego' }, description: { zh: '稳定结构。', en: 'Stability.' }, traditionalMeaning: { zh: '库房。', en: 'Vault.' }, color: '#f97316' },
+  { id: 'tianfu', name: { zh: '天府', en: 'Tian Fu' }, pinyin: 'Tian Fu', category: StarCategory.GRADE_A, realm: LacanRealm.IMAGINARY, lacanConcept: { zh: '自我容器', en: 'Container of Ego' }, description: { zh: '稳定结构。', en: 'Stability.' }, traditionalMeaning: { zh: '库房。', en: 'Vault.' }, color: '#f97316', canTransform: { ke: true } },
   { id: 'taiyin', name: { zh: '太阴', en: 'Tai Yin' }, pinyin: 'Tai Yin', category: StarCategory.GRADE_A, realm: LacanRealm.IMAGINARY, lacanConcept: { zh: '幻想空间', en: 'Phantasy' }, description: { zh: '私密幻景。', en: 'Private phantasy.' }, traditionalMeaning: { zh: '母性。', en: 'Maternal.' }, color: '#818cf8', canTransform: { lu: true, quan: true, ke: true, ji: true } },
   { id: 'tanlang', name: { zh: '贪狼', en: 'Tan Lang' }, pinyin: 'Tan Lang', category: StarCategory.GRADE_A, realm: LacanRealm.IMAGINARY, lacanConcept: { zh: '小客体a', en: 'Objet a' }, description: { zh: '欲望诱因。', en: 'Cause of desire.' }, traditionalMeaning: { zh: '桃花。', en: 'Romance.' }, color: '#ec4899', canTransform: { lu: true, quan: true, ji: true } },
   { id: 'jumen', name: { zh: '巨门', en: 'Ju Men' }, pinyin: 'Ju Men', category: StarCategory.GRADE_A, realm: LacanRealm.REAL, lacanConcept: { zh: '能指深渊', en: 'Abyss of Signifier' }, description: { zh: '言语黑洞。', en: 'Speech gap.' }, traditionalMeaning: { zh: '口舌。', en: 'Dispute.' }, color: '#4b5563', canTransform: { lu: true, quan: true, ji: true } },
@@ -17,8 +18,9 @@ export const STAR_DATA: StarMapping[] = [
   { id: 'tianliang', name: { zh: '天梁', en: 'Tian Liang' }, pinyin: 'Tian Liang', category: StarCategory.GRADE_A, realm: LacanRealm.SYMBOLIC, lacanConcept: { zh: '超我护荫', en: 'Superego Shield' }, description: { zh: '父性庇护。', en: 'Paternal Law.' }, traditionalMeaning: { zh: '荫星。', en: 'Shelter.' }, color: '#84cc16', canTransform: { lu: true, quan: true, ke: true } },
   { id: 'qisha', name: { zh: '七杀', en: 'Qi Sha' }, pinyin: 'Qi Sha', category: StarCategory.GRADE_A, realm: LacanRealm.REAL, lacanConcept: { zh: '死驱力', en: 'Death Drive' }, description: { zh: '毁灭突破。', en: 'Destruction.' }, traditionalMeaning: { zh: '将星。', en: 'General.' }, color: '#b91c1c' },
   { id: 'pojun', name: { zh: '破军', en: 'Po Jun' }, pinyin: 'Po Jun', category: StarCategory.GRADE_A, realm: LacanRealm.REAL, lacanConcept: { zh: '付诸行动', en: 'Passage to Act' }, description: { zh: '能量耗散。', en: 'Expenditure.' }, traditionalMeaning: { zh: '耗星。', en: 'Consumption.' }, color: '#1e3a8a', canTransform: { lu: true, quan: true } },
-  { id: 'zuofu', name: { zh: '左辅', en: 'Zuo Fu' }, pinyin: 'Zuo Fu', category: StarCategory.GRADE_A, realm: LacanRealm.SYMBOLIC, lacanConcept: { zh: '它者援助', en: 'Other\'s Aid' }, description: { zh: '象征界的助力。', en: 'Symbolic help.' }, traditionalMeaning: { zh: '辅佐。', en: 'Assistance.' }, color: '#4ade80' },
-  { id: 'youbi', name: { zh: '右弼', en: 'You Bi' }, pinyin: 'You Bi', category: StarCategory.GRADE_A, realm: LacanRealm.SYMBOLIC, lacanConcept: { zh: '社会认同', en: 'Social ID' }, description: { zh: '秩序的增益。', en: 'Symbolic gain.' }, traditionalMeaning: { zh: '辅助。', en: 'Support.' }, color: '#22c55e' },
+  // 辅助星及四化
+  { id: 'zuofu', name: { zh: '左辅', en: 'Zuo Fu' }, pinyin: 'Zuo Fu', category: StarCategory.GRADE_A, realm: LacanRealm.SYMBOLIC, lacanConcept: { zh: '它者援助', en: 'Other\'s Aid' }, description: { zh: '象征界的助力。', en: 'Symbolic help.' }, traditionalMeaning: { zh: '辅佐。', en: 'Assistance.' }, color: '#4ade80', canTransform: { ke: true } },
+  { id: 'youbi', name: { zh: '右弼', en: 'You Bi' }, pinyin: 'You Bi', category: StarCategory.GRADE_A, realm: LacanRealm.SYMBOLIC, lacanConcept: { zh: '社会认同', en: 'Social ID' }, description: { zh: '秩序的增益。', en: 'Symbolic gain.' }, traditionalMeaning: { zh: '辅助。', en: 'Support.' }, color: '#22c55e', canTransform: { ke: true } },
   { id: 'wenchang', name: { zh: '文昌', en: 'Wen Chang' }, pinyin: 'Wen Chang', category: StarCategory.GRADE_A, realm: LacanRealm.SYMBOLIC, lacanConcept: { zh: '法典文本', en: 'Codified Text' }, description: { zh: '理性的文书。', en: 'Rational text.' }, traditionalMeaning: { zh: '功名。', en: 'Fame.' }, color: '#93c5fd', canTransform: { ke: true, ji: true } },
   { id: 'wenqu', name: { zh: '文曲', en: 'Wen Qu' }, pinyin: 'Wen Qu', category: StarCategory.GRADE_A, realm: LacanRealm.IMAGINARY, lacanConcept: { zh: '艺术幻象', en: 'Artistic Illusion' }, description: { zh: '感性的表象。', en: 'Sensory image.' }, traditionalMeaning: { zh: '才艺。', en: 'Talent.' }, color: '#60a5fa', canTransform: { ke: true, ji: true } },
   { id: 'tiankui', name: { zh: '天魁', en: 'Tian Kui' }, pinyin: 'Tian Kui', category: StarCategory.GRADE_A, realm: LacanRealm.SYMBOLIC, lacanConcept: { zh: '机遇能指', en: 'Opportunity Signifier' }, description: { zh: '公开的垂青。', en: 'Public favor.' }, traditionalMeaning: { zh: '贵人。', en: 'Noble.' }, color: '#fbbf24' },
@@ -34,7 +36,7 @@ export const STAR_DATA: StarMapping[] = [
   { id: 'longchi', name: { zh: '龙池', en: 'Long Chi' }, pinyin: 'Long Chi', category: StarCategory.GRADE_A, realm: LacanRealm.SYMBOLIC, lacanConcept: { zh: '精英名号', en: 'Elite Name' }, description: { zh: '优雅的地位。', en: 'Status.' }, traditionalMeaning: { zh: '名誉。', en: 'Reputation.' }, color: '#d97706' },
   { id: 'fengge', name: { zh: '凤阁', en: 'Feng Ge' }, pinyin: 'Feng Ge', category: StarCategory.GRADE_A, realm: LacanRealm.IMAGINARY, lacanConcept: { zh: '镜像华彩', en: 'Specular Splendor' }, description: { zh: '华丽的假面。', en: 'Ornate persona.' }, traditionalMeaning: { zh: '美感。', en: 'Aesthetics.' }, color: '#f59e0b' },
   { id: 'tianguan', name: { zh: '天官', en: 'Tian Guan' }, pinyin: 'Tian Guan', category: StarCategory.GRADE_A, realm: LacanRealm.SYMBOLIC, lacanConcept: { zh: '官僚枷锁', en: 'Bureaucratic Yoke' }, description: { zh: '职位的象征契约。', en: 'Symbolic contract.' }, traditionalMeaning: { zh: '官贵。', en: 'Rank.' }, color: '#2563eb' },
-  { id: 'tianfu2', name: { zh: '天福', en: 'Tian Fu' }, pinyin: 'Tian Fu', category: StarCategory.GRADE_A, realm: LacanRealm.IMAGINARY, lacanConcept: { zh: '自我安宁', en: 'Serenity of Ego' }, description: { zh: '对现实的防御性满足。', en: 'Defensive joy.' }, traditionalMeaning: { zh: '福气。', en: 'Fortune.' }, color: '#10b981' },
+  { id: 'tianfu_fortune', name: { zh: '天福', en: 'Tian Fu (Fortune)' }, pinyin: 'Tian Fu', category: StarCategory.GRADE_A, realm: LacanRealm.IMAGINARY, lacanConcept: { zh: '自我安宁', en: 'Serenity of Ego' }, description: { zh: '对现实的防御性满足。', en: 'Defensive joy.' }, traditionalMeaning: { zh: '福气。', en: 'Fortune.' }, color: '#10b981' },
 
   // --- 乙级星 (GRADE_B: 32 Stars) ---
   ...[
@@ -55,11 +57,10 @@ export const STAR_DATA: StarMapping[] = [
   })),
 
   // --- 丙级星 (GRADE_C: 28 Stars) ---
-  // 包括：将星十二神 + 岁前十二神(部分重复已剔除) + 其他
   ...[
-    '岁建', '晦气', '丧门', '贯索', '官符', '小耗', '大耗', '龙德', '白虎', '天德', '吊客', '病符',
-    '将星', '攀鞍', '岁驿', '息神', '华盖', '劫煞', '灾煞', '天煞', '指背', '咸池', '月煞', '亡神',
-    '岁建', '晦气', '丧门', '贯索' // 填充到28颗
+    '博士', '力士', '青龙', '小耗', '将军', '奏书', '飞廉', '喜神', '病符', '大耗', 
+    '伏兵', '官府', '长生', '沐浴', '冠带', '临官', '帝旺', '衰', '病', '死', 
+    '墓', '绝', '胎', '养', '截路', '空亡', '旬中', '空亡'
   ].map((name, i) => ({
     id: `grade_c_${i}`,
     name: { zh: name, en: name },
@@ -86,7 +87,7 @@ export const STAR_DATA: StarMapping[] = [
   })),
 
   // --- 戊级星 (GRADE_E: 12 Stars) ---
-  ...['博士', '力士', '青龙', '小耗', '将军', '奏书', '飞廉', '喜神', '病符', '大耗', '伏兵', '官府'].map((name, i) => ({
+  ...['岁建', '晦气', '丧门', '贯索', '官符', '小耗', '大耗', '龙德', '白虎', '天德', '吊客', '病符'].map((name, i) => ({
     id: `grade_e_${i}`,
     name: { zh: name, en: name },
     pinyin: name,

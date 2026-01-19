@@ -85,6 +85,8 @@ const App: React.FC = () => {
     setIsStarSelectorOpen(false);
     // 选中星曜后，自动切换到命盘视图以查看具体的宫位分布
     setViewMode('GRID');
+    // 平滑滚动回顶部查看结果
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [state.selectedPalace]);
 
   const executeAnalysis = async () => {
@@ -219,16 +221,23 @@ const App: React.FC = () => {
                    <div className="space-y-3">
                       <label className="text-[9px] text-slate-600 uppercase font-black tracking-widest ml-1">{t('四化能指', 'TRANSFORM')}</label>
                       <div className="grid grid-cols-4 gap-1.5">
-                        {TRANSFORMATION_DATA.map(tr => (
-                          <button 
-                            key={tr.id} 
-                            onClick={() => setState(p => ({ ...p, selectedTrans: p.selectedTrans?.id === tr.id ? null : tr }))} 
-                            className={`py-3 rounded-xl text-[10px] font-black transition-all border ${state.selectedTrans?.id === tr.id ? 'bg-white text-slate-950 border-white' : 'bg-slate-950/50 border-slate-800'}`} 
-                            style={{ color: state.selectedTrans?.id !== tr.id ? tr.color : 'inherit' }}
-                          >
-                            {tr.name[state.language][1]}
-                          </button>
-                        ))}
+                        {TRANSFORMATION_DATA.map(tr => {
+                          const canTrans = state.selectedStar?.canTransform?.[tr.id as keyof NonNullable<StarMapping['canTransform']>];
+                          return (
+                            <button 
+                              key={tr.id} 
+                              disabled={!canTrans}
+                              onClick={() => setState(p => ({ ...p, selectedTrans: p.selectedTrans?.id === tr.id ? null : tr }))} 
+                              className={`py-3 rounded-xl text-[10px] font-black transition-all border ${
+                                !canTrans ? 'opacity-10 grayscale' : 
+                                state.selectedTrans?.id === tr.id ? 'bg-white text-slate-950 border-white' : 'bg-slate-950/50 border-slate-800'
+                              }`} 
+                              style={{ color: canTrans && state.selectedTrans?.id !== tr.id ? tr.color : 'inherit' }}
+                            >
+                              {tr.name[state.language][1]}
+                            </button>
+                          );
+                        })}
                       </div>
                    </div>
                 </div>
@@ -258,11 +267,11 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      {/* 底部固定导航栏 - 移至最外层确保始终可见 */}
-      <nav className="fixed inset-x-0 bottom-0 z-[200] pb-[env(safe-area-inset-bottom)]">
+      {/* 底部固定导航栏 - 优化后的 DOM 结构 */}
+      <nav className="fixed inset-x-0 bottom-0 z-[200] pb-[env(safe-area-inset-bottom)] pointer-events-none">
         {/* 星曜选择器面板 - 向上弹出 */}
         {isStarSelectorOpen && (
-          <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-[95vw] max-w-2xl mb-4 animate-in slide-in-from-bottom-8 fade-in duration-300">
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-[95vw] max-w-2xl mb-4 pointer-events-auto animate-in slide-in-from-bottom-8 fade-in duration-300">
             <div 
               ref={selectorRef}
               className="bg-slate-900/98 border border-slate-800 rounded-[3rem] shadow-[0_-30px_60px_rgba(0,0,0,0.8)] p-8 backdrop-blur-3xl overflow-hidden"
@@ -305,7 +314,7 @@ const App: React.FC = () => {
         )}
 
         {/* 导航栏主体 */}
-        <div className="h-28 bg-slate-900/95 backdrop-blur-3xl border-t border-slate-800/50 flex justify-center items-center shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
+        <div className="h-28 bg-slate-900/95 backdrop-blur-3xl border-t border-slate-800/50 flex justify-center items-center shadow-[0_-20px_50px_rgba(0,0,0,0.5)] pointer-events-auto">
           <div className="max-w-xl w-full flex justify-around items-center px-4">
             {[
               { id: StarCategory.GRADE_A, label: '甲' },
