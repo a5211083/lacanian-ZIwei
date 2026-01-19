@@ -76,7 +76,7 @@ export async function getDetailedAnalysis(
 
     // 2. Fallback: 调用 Vercel /api/glm (流式解析)
     try {
-      const response = await fetch('api/glm', {
+      const response = await fetch('/api/glm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt })
