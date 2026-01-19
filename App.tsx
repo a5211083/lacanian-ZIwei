@@ -135,7 +135,7 @@ const App: React.FC = () => {
         >
           <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></div>
           <span className="text-[10px] font-black uppercase tracking-[0.2em]">
-            {t('分析视角', 'Lens')}: {STYLE_OPTIONS.find(o => o.id === state.style)?.label[state.language]}
+            {t('视角', 'Lens')}: {STYLE_OPTIONS.find(o => o.id === state.style)?.label[state.language]}
           </span>
           <svg className={`w-3 h-3 transition-transform ${showStyleMenu ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
         </button>
@@ -158,26 +158,12 @@ const App: React.FC = () => {
         )}
       </div>
 
-      <header className="w-full max-w-7xl mb-12 flex flex-col items-center gap-8 text-center">
-        <h1 className="text-5xl md:text-6xl font-black bg-gradient-to-br from-indigo-300 via-purple-400 to-rose-400 bg-clip-text text-transparent italic leading-tight uppercase tracking-tighter">
-          Lacanian ZiWei
-        </h1>
-        <p className="text-slate-500 text-[10px] tracking-[0.8em] uppercase font-bold opacity-60">
-          {t('实在 · 象征 · 想象的命理拓扑', 'RSI Topological Mapping System')}
-        </p>
-        <button 
-          onClick={generateRandomChart} 
-          className="group relative px-12 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-[2rem] text-xs font-black transition-all shadow-[0_0_30px_rgba(79,70,229,0.3)] active:scale-95 uppercase tracking-[0.4em] overflow-hidden"
-        >
-          <span className="relative z-10">{t('重绘命运能指', 'REDRAW SIGNIFIERS')}</span>
-        </button>
-      </header>
 
       <main className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-10">
         <div className="lg:col-span-7 space-y-8">
             <div className="flex bg-slate-900/40 p-1.5 rounded-2xl border border-slate-800/50 w-fit backdrop-blur-md mb-4">
-              <button onClick={() => setViewMode('GRID')} className={`px-8 py-2.5 rounded-xl text-[10px] font-black tracking-widest transition-all ${viewMode === 'GRID' ? 'bg-indigo-600 shadow-lg text-white' : 'text-slate-600 hover:text-slate-300'}`}>GRID</button>
-              <button onClick={() => setViewMode('TOPOLOGY')} className={`px-8 py-2.5 rounded-xl text-[10px] font-black tracking-widest transition-all ${viewMode === 'TOPOLOGY' ? 'bg-rose-600 shadow-lg text-white' : 'text-slate-600 hover:text-slate-300'}`}>TOPOLOGY</button>
+              <button onClick={() => {setViewMode('GRID');generateRandomChart();}} className={`px-8 py-2.5 rounded-xl text-[10px] font-black tracking-widest transition-all ${viewMode === 'GRID' ? 'bg-indigo-600 shadow-lg text-white' : 'text-slate-600 hover:text-slate-300'}`}>{t('星盘', 'GRID')}</button>
+              <button onClick={() => {setViewMode('TOPOLOGY');}} className={`px-8 py-2.5 rounded-xl text-[10px] font-black tracking-widest transition-all ${viewMode === 'TOPOLOGY' ? 'bg-rose-600 shadow-lg text-white' : 'text-slate-600 hover:text-slate-300'}`}>{t('拓扑图', 'TOPOLOGY')}</button>
             </div>
 
             <div className="w-full">
