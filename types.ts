@@ -6,11 +6,18 @@ export enum LacanRealm {
 }
 
 export enum StarCategory {
-  GRADE_A = 'GRADE_A', // 甲级
-  GRADE_B = 'GRADE_B', // 乙级
-  GRADE_C = 'GRADE_C', // 丙级
-  GRADE_D = 'GRADE_D', // 丁级
-  GRADE_E = 'GRADE_E'  // 戊级
+  MAIN = 'MAIN',
+  ASSISTANT = 'ASSISTANT', // 六吉六煞
+  MISC = 'MISC',           // 杂曜
+  PALACE = 'PALACE',
+  TRANSFORMATION = 'TRANSFORMATION'
+}
+
+export enum GlmEnv {
+  GLM_API_KEY = 'bc97425c17324342bb3a9b86af24d529',
+  GLM_API_URL =  "https://open.bigmodel.ai/api/paas/v4/chat/completions",
+  API_TIMEOUT_MS =  "3000000", 
+  CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC = 1
 }
 
 export type Language = 'zh' | 'en';
@@ -68,3 +75,12 @@ export interface AnalysisState {
   aiInsight: string | null;
   language: Language;
 }
+
+export interface Transformation {
+  id: string;
+  name: LocalizedString;
+  color: string;
+  concept: LocalizedString;
+}
+
+

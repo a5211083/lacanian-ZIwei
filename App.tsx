@@ -1,10 +1,10 @@
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { STAR_DATA, PALACE_DATA, TRANSFORMATION_DATA } from './data';
 import { AnalysisState, StarMapping, Language, AnalysisStyle, ChartPalace, Palace, Transformation, StarCategory, LacanRealm } from './types';
 import BirthChart from './components/BirthChart';
 import VisualChart from './components/VisualChart';
-import { generateZwdsChart } from './services/zwds_engine';
+import { generateZwdsChart, BaziInfo } from './services/zwds_engine';
 import { getDetailedAnalysis } from './services/gemini';
 
 const STYLE_OPTIONS: { id: AnalysisStyle; label: { zh: string; en: string } }[] = [
@@ -16,11 +16,9 @@ const STYLE_OPTIONS: { id: AnalysisStyle; label: { zh: string; en: string } }[] 
 
 const App: React.FC = () => {
   const [chart, setChart] = useState<ChartPalace[]>([]);
-  // 默认显示 TOPOLOGY 拓扑视图
-  const [viewMode, setViewMode] = useState<'GRID' | 'TOPOLOGY'>('TOPOLOGY');
+  const [viewMode, setViewMode] = useState<'GRID' | 'TOPOLOGY'>('GRID');
   const [isCopied, setIsCopied] = useState(false);
   const [showStyleMenu, setShowStyleMenu] = useState(false);
-  const [isStarSelectorOpen, setIsStarSelectorOpen] = useState(false);
   
   const [state, setState] = useState<AnalysisState>({
     selectedStar: null,
@@ -32,8 +30,7 @@ const App: React.FC = () => {
     language: 'zh'
   });
 
-  const [activeTab, setActiveTab] = useState<StarCategory>(StarCategory.GRADE_A);
-  const selectorRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState<StarCategory>(StarCategory.MAIN);
 
   const formatInsight = (text: string | null) => {
     if (!text) return '';
@@ -63,16 +60,6 @@ const App: React.FC = () => {
     generateRandomChart();
   }, [generateRandomChart]);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (selectorRef.current && !selectorRef.current.contains(event.target as Node)) {
-        setIsStarSelectorOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   const handleSelectStar = useCallback((star: StarMapping, palaceId?: string) => {
     const palace = palaceId ? PALACE_DATA.find(p => p.id === palaceId) : state.selectedPalace;
     setState(prev => ({ 
@@ -82,26 +69,18 @@ const App: React.FC = () => {
       selectedTrans: null,
       aiInsight: null 
     }));
-    setIsStarSelectorOpen(false);
-    // 选中星曜后，自动切换到命盘视图以查看具体的宫位分布
-    setViewMode('GRID');
-    // 平滑滚动回顶部查看结果
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [state.selectedPalace]);
 
   const executeAnalysis = async () => {
     if (!state.selectedStar) return;
-    setState(prev => ({ ...prev, loading: true, aiInsight: "" }));
+    setState(prev => ({ ...prev, loading: true }));
     try {
       const insight = await getDetailedAnalysis(
         state.selectedStar, 
         state.selectedPalace, 
         state.selectedTrans, 
         state.language, 
-        state.style,
-        (text) => {
-          setState(prev => ({ ...prev, aiInsight: text }));
-        }
+        state.style
       );
       setState(prev => ({ ...prev, aiInsight: insight, loading: false }));
     } catch {
@@ -112,11 +91,28 @@ const App: React.FC = () => {
   const handleCopy = useCallback(async () => {
     if (!state.aiInsight) return;
     const cleanText = formatInsight(state.aiInsight);
-    if (navigator.clipboard) {
-      await navigator.clipboard.writeText(cleanText);
+
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(cleanText);
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+        return;
+      } catch (err) {
+        console.warn("Clipboard API failed");
+      }
+    }
+
+    const textArea = document.createElement("textarea");
+    textArea.value = cleanText;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
-    }
+    } catch (err) {}
+    document.body.removeChild(textArea);
   }, [state.aiInsight]);
 
   const t = (zh: string, en: string) => (state.language === 'zh' ? zh : en);
@@ -126,16 +122,16 @@ const App: React.FC = () => {
   }, [activeTab]);
 
   return (
-    <div className="relative min-h-screen bg-slate-950 text-slate-200 p-4 md:p-8 flex flex-col items-center selection:bg-indigo-500/30 pb-48">
-      {/* 顶部工具栏 */}
-      <div className="fixed top-6 right-6 z-[110] flex flex-col items-end gap-2">
+    <div className="min-h-screen bg-slate-950 text-slate-200 p-4 md:p-8 flex flex-col items-center selection:bg-indigo-500/30">
+      {/* Top Right Settings Overlay */}
+      <div className="fixed top-6 right-6 z-50 flex flex-col items-end gap-2">
         <button 
           onClick={() => setShowStyleMenu(!showStyleMenu)}
           className={`px-4 py-2 rounded-xl border flex items-center gap-3 transition-all backdrop-blur-md ${showStyleMenu ? 'bg-indigo-600 border-indigo-400 shadow-lg' : 'bg-slate-900/60 border-slate-800 hover:border-slate-600'}`}
         >
           <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></div>
           <span className="text-[10px] font-black uppercase tracking-[0.2em]">
-            {t('视角', 'Lens')}: {STYLE_OPTIONS.find(o => o.id === state.style)?.label[state.language]}
+            {t('分析视角', 'Analysis Lens')}: {STYLE_OPTIONS.find(o => o.id === state.style)?.label[state.language]}
           </span>
           <svg className={`w-3 h-3 transition-transform ${showStyleMenu ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
         </button>
@@ -158,25 +154,48 @@ const App: React.FC = () => {
         )}
       </div>
 
+      <header className="w-full max-w-7xl mb-12 flex flex-col items-center gap-8">
+        <div className="text-center">
+          <h1 className="text-5xl md:text-6xl font-black bg-gradient-to-br from-indigo-300 via-purple-400 to-rose-400 bg-clip-text text-transparent italic leading-tight uppercase tracking-tighter">
+            Lacanian ZiWei
+          </h1>
+          <p className="text-slate-500 text-[10px] tracking-[0.8em] uppercase font-bold mt-4 opacity-60">
+            {t('实在 · 象征 · 想象的命理拓扑', 'RSI Topological Mapping System')}
+          </p>
+        </div>
 
-      <main className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <div className="flex flex-col items-center gap-4">
+          <button 
+            onClick={generateRandomChart} 
+            className="group relative px-12 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-[2rem] text-xs font-black transition-all shadow-[0_0_30px_rgba(79,70,229,0.3)] active:scale-95 uppercase tracking-[0.4em] overflow-hidden"
+          >
+            <span className="relative z-10">{t('开始探索随机命盘', 'EXPLORE RANDOM CHART')}</span>
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] skew-x-12"></div>
+          </button>
+          <p className="text-[9px] text-slate-600 font-medium italic opacity-50 uppercase tracking-widest">
+            {t('抛弃决定论：点击按钮，在偶然性中遇见你的能指', 'Abandon determinism: click to meet your signifiers in contingency')}
+          </p>
+        </div>
+      </header>
+
+      <main className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-10 mt-8">
         <div className="lg:col-span-7 space-y-8">
-            <div className="flex bg-slate-900/40 p-1.5 rounded-2xl border border-slate-800/50 w-fit backdrop-blur-md mb-4">
-              <button onClick={() => {setViewMode('GRID');generateRandomChart();}} className={`px-8 py-2.5 rounded-xl text-[10px] font-black tracking-widest transition-all ${viewMode === 'GRID' ? 'bg-indigo-600 shadow-lg text-white' : 'text-slate-600 hover:text-slate-300'}`}>{t('星盘', 'GRID')}</button>
-              <button onClick={() => {setViewMode('TOPOLOGY');}} className={`px-8 py-2.5 rounded-xl text-[10px] font-black tracking-widest transition-all ${viewMode === 'TOPOLOGY' ? 'bg-rose-600 shadow-lg text-white' : 'text-slate-600 hover:text-slate-300'}`}>{t('拓扑图', 'TOPOLOGY')}</button>
+           <div className="flex bg-slate-900/40 p-1.5 rounded-2xl border border-slate-800/50 w-fit backdrop-blur-md">
+              <button onClick={() => setViewMode('GRID')} className={`px-8 py-2.5 rounded-xl text-[10px] font-black tracking-widest transition-all ${viewMode === 'GRID' ? 'bg-indigo-600 shadow-lg text-white' : 'text-slate-600 hover:text-slate-300'}`}>GRID</button>
+              <button onClick={() => setViewMode('TOPOLOGY')} className={`px-8 py-2.5 rounded-xl text-[10px] font-black tracking-widest transition-all ${viewMode === 'TOPOLOGY' ? 'bg-rose-600 shadow-lg text-white' : 'text-slate-600 hover:text-slate-300'}`}>TOPOLOGY</button>
             </div>
 
-            <div className="w-full">
+            <div className="w-full transition-all duration-700">
               {viewMode === 'GRID' ? (
                 <BirthChart chart={chart} lang={state.language} onSelectStar={handleSelectStar} selectedStarId={state.selectedStar?.id || null} />
               ) : (
-                <VisualChart onSelectStar={handleSelectStar} selectedId={state.selectedStar?.id || null} filter={activeTab} lang={state.language} />
+                <VisualChart onSelectStar={handleSelectStar} selectedId={state.selectedStar?.id || null} filter="ALL" lang={state.language} />
               )}
             </div>
         </div>
 
         <div className="lg:col-span-5 space-y-8">
-          <div className="bg-slate-900/40 border border-slate-800/50 rounded-[3.5rem] p-8 md:p-12 shadow-2xl relative overflow-hidden backdrop-blur-2xl transition-all h-full min-h-[500px]">
+          <div className="bg-slate-900/40 border border-slate-800/50 rounded-[3.5rem] p-8 md:p-12 shadow-2xl relative overflow-hidden backdrop-blur-2xl transition-all border-indigo-500/5 hover:border-indigo-500/20">
             {state.selectedStar ? (
               <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-500">
                 <div className="flex justify-between items-start border-b border-slate-800/30 pb-10">
@@ -198,27 +217,24 @@ const App: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-8">
                    <div className="space-y-3">
-                      <label className="text-[9px] text-slate-600 uppercase font-black tracking-widest ml-1">{t('所在宫位', 'PALACE')}</label>
-                      <select value={state.selectedPalace?.id || ''} onChange={(e) => setState(p => ({...p, selectedPalace: PALACE_DATA.find(pd => pd.id === e.target.value) || null}))} className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl p-4 text-xs font-bold focus:ring-1 ring-indigo-500 outline-none text-indigo-100 appearance-none cursor-pointer">
+                      <label className="text-[9px] text-slate-600 uppercase font-black tracking-widest ml-1">{t('所在宫位', 'TARGET PALACE')}</label>
+                      <select value={state.selectedPalace?.id || ''} onChange={(e) => setState(p => ({...p, selectedPalace: PALACE_DATA.find(pd => pd.id === e.target.value) || null}))} className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl p-4 text-xs font-bold focus:ring-1 ring-indigo-500 outline-none transition-all text-indigo-100 appearance-none cursor-pointer">
                         <option value="">{t('宫位独立解析', 'INDEPENDENT')}</option>
                         {PALACE_DATA.map(p => <option key={p.id} value={p.id}>{p.name[state.language]}</option>)}
                       </select>
                    </div>
                    <div className="space-y-3">
-                      <label className="text-[9px] text-slate-600 uppercase font-black tracking-widest ml-1">{t('四化能指', 'TRANSFORM')}</label>
+                      <label className="text-[9px] text-slate-600 uppercase font-black tracking-widest ml-1">{t('四化能指叠加', 'TRANSFORMATION')}</label>
                       <div className="grid grid-cols-4 gap-1.5">
                         {TRANSFORMATION_DATA.map(tr => {
-                          const canTrans = state.selectedStar?.canTransform?.[tr.id as keyof NonNullable<StarMapping['canTransform']>];
+                          const isPossible = state.selectedStar?.canTransform?.[tr.id as keyof typeof state.selectedStar.canTransform];
                           return (
                             <button 
                               key={tr.id} 
-                              disabled={!canTrans}
+                              disabled={!isPossible} 
                               onClick={() => setState(p => ({ ...p, selectedTrans: p.selectedTrans?.id === tr.id ? null : tr }))} 
-                              className={`py-3 rounded-xl text-[10px] font-black transition-all border ${
-                                !canTrans ? 'opacity-10 grayscale' : 
-                                state.selectedTrans?.id === tr.id ? 'bg-white text-slate-950 border-white' : 'bg-slate-950/50 border-slate-800'
-                              }`} 
-                              style={{ color: canTrans && state.selectedTrans?.id !== tr.id ? tr.color : 'inherit' }}
+                              className={`py-3 rounded-xl text-[10px] font-black transition-all border ${!isPossible ? 'opacity-5 grayscale pointer-events-none' : state.selectedTrans?.id === tr.id ? 'bg-white text-slate-950 border-white shadow-xl scale-105' : 'bg-slate-950/50 border-slate-800 hover:border-slate-600'}`} 
+                              style={{ color: isPossible && state.selectedTrans?.id !== tr.id ? tr.color : 'inherit' }}
                             >
                               {tr.name[state.language][1]}
                             </button>
@@ -228,119 +244,82 @@ const App: React.FC = () => {
                    </div>
                 </div>
 
-                <button onClick={executeAnalysis} disabled={state.loading} className="w-full py-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-rose-600 rounded-[2.5rem] font-black text-[11px] tracking-[0.5em] uppercase hover:brightness-110 active:scale-[0.98] transition-all shadow-2xl">
-                  {state.loading ? t('结构解码中...', 'DECODING...') : t('执行深度解析', 'EXECUTE ANALYSIS')}
+                <button onClick={executeAnalysis} disabled={state.loading} className="w-full py-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-rose-600 rounded-[2.5rem] font-black text-[11px] tracking-[0.5em] uppercase hover:brightness-110 active:scale-[0.98] transition-all shadow-2xl shadow-indigo-900/30">
+                  {state.loading ? t('结构解码中...', 'DECODING STRUCTURE...') : t('执行深度解析', 'EXECUTE ANALYSIS')}
                 </button>
 
-                {state.aiInsight !== null && (
-                  <div className="bg-slate-950/60 p-8 rounded-[3rem] border border-indigo-500/10 backdrop-blur-md relative">
-                    <button onClick={handleCopy} className="absolute top-4 right-4 text-[9px] font-bold text-slate-500 hover:text-white transition-colors">{isCopied ? t('已复制', 'COPIED') : t('复制', 'COPY')}</button>
-                    <p className="text-sm leading-relaxed text-slate-300 font-serif italic whitespace-pre-wrap">
+                {state.aiInsight && (
+                  <div className="bg-slate-950/60 p-8 rounded-[3rem] border border-indigo-500/10 animate-in zoom-in-95 backdrop-blur-md relative group/insight">
+                    <div className="absolute -top-3 left-8 px-3 py-1 bg-indigo-600 rounded-full text-[8px] font-black tracking-widest text-white uppercase shadow-lg">
+                      {STYLE_OPTIONS.find(o => o.id === state.style)?.label[state.language]} {t('视角', 'LENS')}
+                    </div>
+                    <button 
+                      onClick={handleCopy}
+                      className={`absolute top-4 right-4 p-2 rounded-xl border border-slate-800 transition-all opacity-0 group-hover/insight:opacity-100 hover:border-indigo-500 active:scale-90 flex items-center gap-2 ${isCopied ? 'bg-indigo-600 border-indigo-500 text-white opacity-100' : 'bg-slate-900 text-slate-400'}`}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                      <span className="text-[10px] font-black tracking-widest">{isCopied ? t('已复制', 'COPIED') : t('复制', 'COPY')}</span>
+                    </button>
+                    <p className="text-sm leading-relaxed text-slate-300 font-serif italic whitespace-pre-wrap pr-8">
                       {formatInsight(state.aiInsight)}
                     </p>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="h-full flex flex-col items-center justify-center opacity-30 text-center space-y-8">
-                <div className="w-20 h-20 rounded-full border-2 border-dashed border-indigo-500/40 animate-spin-slow"></div>
-                <p className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-400">
-                  {t('点击命盘中的星曜\n开始解码之旅', 'SELECT A STAR TO BEGIN')}
+              <div className="h-[450px] flex flex-col items-center justify-center opacity-30 text-center space-y-8">
+                <div className="relative">
+                  <div className="w-20 h-20 rounded-full border-2 border-dashed border-indigo-500/40 animate-spin-slow"></div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-2 h-2 bg-indigo-500 rounded-full animate-ping"></div>
+                  </div>
+                </div>
+                <p className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-400 max-w-[250px] leading-relaxed">
+                  {t('点击命盘中的星曜能指\n开始解码之旅', 'SELECT A SIGNIFIER TO START THE JOURNEY')}
                 </p>
               </div>
             )}
           </div>
+
+          <div className="bg-slate-900/40 border border-slate-800/50 rounded-[3rem] p-8 backdrop-blur-xl">
+            <div className="flex gap-8 mb-6 border-b border-slate-800/40 pb-4 overflow-x-auto no-scrollbar">
+              {[StarCategory.MAIN, StarCategory.ASSISTANT, StarCategory.MISC].map(cat => (
+                <button key={cat} onClick={() => setActiveTab(cat)} className={`text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap pb-1 ${activeTab === cat ? 'text-indigo-400 border-b-2 border-indigo-400' : 'text-slate-600 hover:text-slate-400'}`}>
+                  {cat === StarCategory.MAIN ? t('14主星', 'Main Stars') : cat === StarCategory.ASSISTANT ? t('14助星', 'Assistant Stars') : t('杂曜精选', 'Misc Stars')}
+                </button>
+              ))}
+            </div>
+            <div className="grid grid-cols-4 gap-2.5 max-h-[250px] overflow-y-auto custom-scrollbar pr-3">
+              {availableStars.map(star => (
+                <button 
+                  key={star.id} 
+                  onClick={() => handleSelectStar(star)} 
+                  className={`px-2 py-3.5 rounded-2xl text-[10px] font-bold border transition-all truncate text-center ${state.selectedStar?.id === star.id ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg' : 'bg-slate-950/50 border-slate-800 text-slate-500 hover:border-slate-600 hover:text-slate-300'}`}
+                >
+                  {star.name[state.language]}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </main>
 
-      {/* 底部固定导航栏 - 优化后的 DOM 结构 */}
-      <nav className="fixed inset-x-0 bottom-0 z-[200] pb-[env(safe-area-inset-bottom)] pointer-events-none">
-        {/* 星曜选择器面板 - 向上弹出 */}
-        {isStarSelectorOpen && (
-          <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-[95vw] max-w-2xl mb-4 pointer-events-auto animate-in slide-in-from-bottom-8 fade-in duration-300">
-            <div 
-              ref={selectorRef}
-              className="bg-slate-900/98 border border-slate-800 rounded-[3rem] shadow-[0_-30px_60px_rgba(0,0,0,0.8)] p-8 backdrop-blur-3xl overflow-hidden"
-            >
-              <div className="flex justify-between items-center mb-6 px-4">
-                <div className="flex flex-col">
-                  <h3 className="text-sm font-black uppercase tracking-[0.4em] text-indigo-400">
-                    {t('能指选取', 'SIGNIFIER SELECT')}
-                  </h3>
-                  <span className="text-[9px] text-slate-600 font-bold uppercase tracking-widest mt-1">
-                    Grade {activeTab.split('_')[1]} Stars
-                  </span>
-                </div>
-                <button 
-                  onClick={() => setIsStarSelectorOpen(false)} 
-                  className="w-10 h-10 rounded-full bg-slate-800/50 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all"
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 max-h-[45vh] overflow-y-auto custom-scrollbar pr-2 pb-4">
-                {availableStars.map(star => (
-                  <button 
-                    key={star.id} 
-                    onClick={() => handleSelectStar(star)} 
-                    className={`px-2 py-4 rounded-2xl text-[11px] font-bold border transition-all duration-300 truncate text-center flex flex-col items-center gap-1 ${
-                      state.selectedStar?.id === star.id 
-                      ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg scale-105' 
-                      : 'bg-slate-950/40 border-slate-800/60 text-slate-500 hover:border-slate-500 hover:text-slate-200 hover:bg-slate-800/40'
-                    }`}
-                  >
-                    {star.name[state.language]}
-                  </button>
-                ))}
-              </div>
-              <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-slate-900 pointer-events-none"></div>
-            </div>
-          </div>
-        )}
-
-        {/* 导航栏主体 */}
-        <div className="h-28 bg-slate-900/95 backdrop-blur-3xl border-t border-slate-800/50 flex justify-center items-center shadow-[0_-20px_50px_rgba(0,0,0,0.5)] pointer-events-auto">
-          <div className="max-w-xl w-full flex justify-around items-center px-4">
-            {[
-              { id: StarCategory.GRADE_A, label: '甲' },
-              { id: StarCategory.GRADE_B, label: '乙' },
-              { id: StarCategory.GRADE_C, label: '丙' },
-              { id: StarCategory.GRADE_D, label: '丁' },
-              { id: StarCategory.GRADE_E, label: '戊' }
-            ].map((grade) => (
-              <button
-                key={grade.id}
-                onClick={() => {
-                  if (activeTab === grade.id && isStarSelectorOpen) {
-                    setIsStarSelectorOpen(false);
-                  } else {
-                    setActiveTab(grade.id);
-                    setIsStarSelectorOpen(true);
-                  }
-                }}
-                className={`flex flex-col items-center gap-2 group transition-all duration-300 ${activeTab === grade.id ? 'scale-110' : 'opacity-40 hover:opacity-100'}`}
-              >
-                <div className={`w-14 h-14 rounded-full flex items-center justify-center text-xl font-black border-2 transition-all duration-500 ${
-                  activeTab === grade.id 
-                  ? 'bg-gradient-to-br from-indigo-500 to-purple-600 border-indigo-300 text-white shadow-[0_0_30px_rgba(79,70,229,0.6)]' 
-                  : 'bg-slate-950 border-slate-800 text-slate-500'
-                }`}>
-                  {grade.label}
-                </div>
-                <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${activeTab === grade.id ? 'text-indigo-400' : 'text-slate-600'}`}>
-                  {grade.id.split('_')[1]}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </nav>
-
-      <footer className="mt-32 text-[9px] text-slate-900 font-bold tracking-[0.8em] uppercase mb-16 flex flex-col items-center gap-6">
+      <footer className="mt-24 text-[9px] text-slate-900 font-bold tracking-[0.8em] uppercase mb-16 flex flex-col items-center gap-6">
         <div className="h-px w-32 bg-slate-900"></div>
-        <span>LACANIAN ZIWEI RSI TOPOLOGY // 110 SIGNIFIERS MAPPED</span>
+        <span>LACANIAN ZIWEI RSI TOPOLOGY // POWERED BY GEMINI PRO & IZTRO</span>
       </footer>
+
+      <style>{`
+        @keyframes shimmer {
+          0% { transform: translateX(-100%) skewX(12deg); }
+          100% { transform: translateX(200%) skewX(12deg); }
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+        @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .animate-spin-slow { animation: spin-slow 20s linear infinite; }
+      `}</style>
     </div>
   );
 };

@@ -18,7 +18,7 @@ export interface BaziInfo {
 export function calculateBazi(date: Date): BaziInfo {
   const year = date.getFullYear(), month = date.getMonth(), day = date.getDate(), hour = date.getHours(), minute = date.getMinutes();
 
-    const getJD = (y: number, m: number, d: number, h: number, min: number) => {
+    const getJD = (y, m, d, h, min) => {
         if (m <= 2) { y -= 1; m += 12; }
         const A = Math.floor(y / 100);
         const B = 2 - A + Math.floor(A / 4);
@@ -28,7 +28,7 @@ export function calculateBazi(date: Date): BaziInfo {
                d + dayFraction + B - 1524.5;
     };
 
-    const getSolarLongitude = (jd: number) => {
+    const getSolarLongitude = (jd) => {
         const D = jd - 2451545.0;
         const rad = Math.PI / 180;
         let L = (280.460 + 0.9856474 * D) % 360;
@@ -138,9 +138,8 @@ export function generateZwdsChart(dateStr: string, hourIdx: number, timezone: nu
     placeStar(id, pos);
   });
 
-  // 分配所有的杂曜 (Grade B, C, D, E)
-  // Fix: MISC property does not exist on StarCategory. Filtering for non-Grade A stars instead.
-  const miscStars = STAR_DATA.filter(s => s.category !== StarCategory.GRADE_A);
+  // 分配所有的杂曜 (MISC)
+  const miscStars = STAR_DATA.filter(s => s.category === StarCategory.MISC);
   miscStars.forEach((star, i) => {
     // 使用生日和索引生成的伪随机位置
     const pos = (d + i + m + hourBranchIdx) % 12;
