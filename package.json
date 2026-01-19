@@ -7,15 +7,12 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "start": "node api-server/index.js"
   },
   "dependencies": {
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "@google/genai": "^1.37.0",
-    "iztro": "^2.5.3",
-    "express": "latest",
-    "cors": "latest"
+    "iztro": "^2.5.3"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
