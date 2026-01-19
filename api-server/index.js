@@ -6,7 +6,7 @@ const path = require('path');
 
 // 关键：将前端打包后的 dist 文件夹变为静态资源
 // 假设你的 React 打包后叫 dist，并且 server 和 frontend 在同级目录
-app.use(express.static(path.join(__dirname, '../frontend/dist')));
+app.use(express.static(path.join(__dirname, '../')));
 
 // 自动处理 CORS（包括 OPTIONS 预检请求），不需要再手写那一堆 Headers
 app.use(cors());
