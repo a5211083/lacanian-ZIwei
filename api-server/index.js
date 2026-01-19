@@ -1,31 +1,38 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
+const fs = require('fs');
 const app = express();
 
-const path = require('path');
-
-// 关键：将前端打包后的 dist 文件夹变为静态资源
-// 假设你的 React 打包后叫 dist，并且 server 和 frontend 在同级目录
-app.use(express.static(path.join(__dirname, '../')));
-
-// 自动处理 CORS（包括 OPTIONS 预检请求），不需要再手写那一堆 Headers
 app.use(cors());
 app.use(express.json());
 
+// --- 路径逻辑修复 ---
+// __dirname 是 server-api 文件夹
+// ../ 是项目根目录
+// 这里的 'dist' 是 React 默认打包后的文件夹名，如果你的叫 'build'，请修改此处
+const rootPath = path.resolve(__dirname, '../'); 
+const distPath = path.join(rootPath, 'dist'); 
+
+// 1. 静态资源处理
+if (fs.existsSync(distPath)) {
+    app.use(express.static(distPath));
+    console.log("✅ 成功关联前端静态目录:", distPath);
+} else {
+    // 如果根目录下没有 dist，尝试直接把根目录作为静态资源（针对某些特殊布局）
+    app.use(express.static(rootPath));
+    console.warn("⚠️ 未找到 dist 文件夹，已将根目录作为静态资源路径");
+}
+
+// 2. AI 接口 (保持不变)
 app.post('/api/glm', async (req, res) => {
     try {
         const { prompt } = req.body;
-
-        if (!prompt) {
-            return res.status(400).json({ error: '缺少 prompt 参数' });
-        }
+        if (!prompt) return res.status(400).json({ error: '缺少 prompt 参数' });
 
         const apiKey = process.env.GLM_API_KEY;
-        if (!apiKey) {
-            return res.status(500).json({ error: '服务器未配置 API Key' });
-        }
+        if (!apiKey) return res.status(500).json({ error: '服务器未配置 API Key' });
 
-        // 发起请求到硅基流动
         const response = await fetch("https://api.siliconflow.cn/v1/chat/completions", {
             method: 'POST',
             headers: {
@@ -37,7 +44,7 @@ app.post('/api/glm', async (req, res) => {
                 messages: [{ role: "user", content: prompt }],
                 temperature: 0.7,
                 max_tokens: 1024,
-                stream: true // 开启流式输出
+                stream: true
             })
         });
 
@@ -46,38 +53,44 @@ app.post('/api/glm', async (req, res) => {
             return res.status(response.status).json({ error: 'AI 平台返回错误', detail: errorDetail });
         }
 
-        // === 核心：流式响应的处理 ===
-        // 设置响应头，告知浏览器这是一个流
         res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
 
-        // 使用 Node.js 的 ReadableStream 读取并转发数据
         const reader = response.body.getReader();
-        
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            
-            // 将每一块数据直接写入响应流
             res.write(value);
         }
-
-        res.end(); // 传输结束
+        res.end();
 
     } catch (err) {
-        console.error("服务器内部错误:", err);
-        res.status(500).json({ error: '服务器内部错误', message: err.message });
+        console.error("服务器错误:", err);
+        if (!res.headersSent) {
+            res.status(500).json({ error: '内部错误', message: err.message });
+        }
     }
 });
 
-// 关键：所有找不到的路径都指向 index.html（适配 React Router）
+// 3. 兜底路由修复：返回前端的 index.html
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/dist', 'index.html'));
+    // 优先尝试找 dist/index.html，找不到则找 根目录/index.html
+    const distIndex = path.join(distPath, 'index.html');
+    const rootIndex = path.join(rootPath, 'index.html');
+
+    if (fs.existsSync(distIndex)) {
+        res.sendFile(distIndex);
+    } else if (fs.existsSync(rootIndex)) {
+        res.sendFile(rootIndex);
+    } else {
+        res.status(404).send("未找到 index.html。请确保你已经运行了 npm run build 并且文件位置正确。");
+    }
 });
 
-// 启动服务
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`🚀 后端已启动：端口 ${PORT}`);
+    console.log(`📁 当前后端文件位置: ${__dirname}`);
+    console.log(`🌐 尝试寻找前端位置: ${distPath}`);
 });
