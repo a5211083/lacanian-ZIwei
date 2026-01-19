@@ -74,7 +74,7 @@ app.post('/api/glm', async (req, res) => {
 });
 
 // 3. 兜底路由修复：返回前端的 index.html
-app.get('(.*)', (req, res) => {
+app.get(/(.*)/, (req, res) => {  
     // 优先尝试找 dist/index.html，找不到则找 根目录/index.html
     const distIndex = path.join(distPath, 'index.html');
     const rootIndex = path.join(rootPath, 'index.html');
