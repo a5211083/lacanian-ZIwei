@@ -16,7 +16,8 @@ const STYLE_OPTIONS: { id: AnalysisStyle; label: { zh: string; en: string } }[] 
 
 const App: React.FC = () => {
   const [chart, setChart] = useState<ChartPalace[]>([]);
-  const [viewMode, setViewMode] = useState<'GRID' | 'TOPOLOGY'>('GRID');
+  // 默认显示 TOPOLOGY 拓扑视图
+  const [viewMode, setViewMode] = useState<'GRID' | 'TOPOLOGY'>('TOPOLOGY');
   const [isCopied, setIsCopied] = useState(false);
   const [showStyleMenu, setShowStyleMenu] = useState(false);
   const [isStarSelectorOpen, setIsStarSelectorOpen] = useState(false);
@@ -82,6 +83,8 @@ const App: React.FC = () => {
       aiInsight: null 
     }));
     setIsStarSelectorOpen(false);
+    // 选中星曜后，自动切换到命盘视图以查看具体的宫位分布
+    setViewMode('GRID');
   }, [state.selectedPalace]);
 
   const executeAnalysis = async () => {
@@ -121,7 +124,8 @@ const App: React.FC = () => {
   }, [activeTab]);
 
   return (
-    <div className="relative min-h-screen bg-slate-950 text-slate-200 p-4 md:p-8 flex flex-col items-center selection:bg-indigo-500/30 pb-40">
+    <div className="relative min-h-screen bg-slate-950 text-slate-200 p-4 md:p-8 flex flex-col items-center selection:bg-indigo-500/30 pb-48">
+      {/* 顶部工具栏 */}
       <div className="fixed top-6 right-6 z-[110] flex flex-col items-end gap-2">
         <button 
           onClick={() => setShowStyleMenu(!showStyleMenu)}
@@ -254,84 +258,88 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      {/* Fixed Bottom Navigation - Always visible and pinned to viewport */}
-      <nav className="fixed inset-x-0 bottom-0 h-32 bg-slate-900/95 backdrop-blur-3xl border-t border-slate-800/50 z-[200] flex justify-center items-start pt-6 px-4 shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
-        <div className="max-w-xl w-full flex justify-around items-center">
-          {[
-            { id: StarCategory.GRADE_A, label: '甲' },
-            { id: StarCategory.GRADE_B, label: '乙' },
-            { id: StarCategory.GRADE_C, label: '丙' },
-            { id: StarCategory.GRADE_D, label: '丁' },
-            { id: StarCategory.GRADE_E, label: '戊' }
-          ].map((grade) => (
-            <button
-              key={grade.id}
-              onClick={() => {
-                if (activeTab === grade.id && isStarSelectorOpen) {
-                  setIsStarSelectorOpen(false);
-                } else {
-                  setActiveTab(grade.id);
-                  setIsStarSelectorOpen(true);
-                }
-              }}
-              className={`flex flex-col items-center gap-2 group transition-all duration-300 ${activeTab === grade.id ? 'scale-110' : 'opacity-40 hover:opacity-100'}`}
-            >
-              <div className={`w-14 h-14 rounded-full flex items-center justify-center text-xl font-black border-2 transition-all duration-500 ${
-                activeTab === grade.id 
-                ? 'bg-gradient-to-br from-indigo-500 to-purple-600 border-indigo-300 text-white shadow-[0_0_30px_rgba(79,70,229,0.6)]' 
-                : 'bg-slate-950 border-slate-800 text-slate-500'
-              }`}>
-                {grade.label}
-              </div>
-              <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${activeTab === grade.id ? 'text-indigo-400' : 'text-slate-600'}`}>
-                {grade.id.split('_')[1]}
-              </span>
-            </button>
-          ))}
-        </div>
-
-        {/* Floating Star Selector Dropdown/Popover - Positioned above the nav */}
+      {/* 底部固定导航栏 - 移至最外层确保始终可见 */}
+      <nav className="fixed inset-x-0 bottom-0 z-[200] pb-[env(safe-area-inset-bottom)]">
+        {/* 星曜选择器面板 - 向上弹出 */}
         {isStarSelectorOpen && (
-          <div 
-            ref={selectorRef}
-            className="absolute bottom-full left-1/2 -translate-x-1/2 w-[95vw] max-w-2xl bg-slate-900/98 border border-slate-800 rounded-[3rem] shadow-[0_-30px_60px_rgba(0,0,0,0.8)] p-8 backdrop-blur-3xl animate-in slide-in-from-bottom-10 fade-in duration-300 mb-4 overflow-hidden"
-          >
-            <div className="flex justify-between items-center mb-8 px-4">
-              <div className="flex flex-col">
-                <h3 className="text-sm font-black uppercase tracking-[0.4em] text-indigo-400">
-                  {t('能指选取', 'SIGNIFIER SELECT')}
-                </h3>
-                <span className="text-[9px] text-slate-600 font-bold uppercase tracking-widest mt-1">
-                  Grade {activeTab.split('_')[1]} Stars
-                </span>
-              </div>
-              <button 
-                onClick={() => setIsStarSelectorOpen(false)} 
-                className="w-10 h-10 rounded-full bg-slate-800/50 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </div>
-            
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 max-h-[50vh] overflow-y-auto custom-scrollbar pr-2 pb-4">
-              {availableStars.map(star => (
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-[95vw] max-w-2xl mb-4 animate-in slide-in-from-bottom-8 fade-in duration-300">
+            <div 
+              ref={selectorRef}
+              className="bg-slate-900/98 border border-slate-800 rounded-[3rem] shadow-[0_-30px_60px_rgba(0,0,0,0.8)] p-8 backdrop-blur-3xl overflow-hidden"
+            >
+              <div className="flex justify-between items-center mb-6 px-4">
+                <div className="flex flex-col">
+                  <h3 className="text-sm font-black uppercase tracking-[0.4em] text-indigo-400">
+                    {t('能指选取', 'SIGNIFIER SELECT')}
+                  </h3>
+                  <span className="text-[9px] text-slate-600 font-bold uppercase tracking-widest mt-1">
+                    Grade {activeTab.split('_')[1]} Stars
+                  </span>
+                </div>
                 <button 
-                  key={star.id} 
-                  onClick={() => handleSelectStar(star)} 
-                  className={`px-2 py-4 rounded-2xl text-[11px] font-bold border transition-all duration-300 truncate text-center flex flex-col items-center gap-1 ${
-                    state.selectedStar?.id === star.id 
-                    ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg scale-105' 
-                    : 'bg-slate-950/40 border-slate-800/60 text-slate-500 hover:border-slate-500 hover:text-slate-200 hover:bg-slate-800/40'
-                  }`}
+                  onClick={() => setIsStarSelectorOpen(false)} 
+                  className="w-10 h-10 rounded-full bg-slate-800/50 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all"
                 >
-                  {star.name[state.language]}
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
-              ))}
+              </div>
+              
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 max-h-[45vh] overflow-y-auto custom-scrollbar pr-2 pb-4">
+                {availableStars.map(star => (
+                  <button 
+                    key={star.id} 
+                    onClick={() => handleSelectStar(star)} 
+                    className={`px-2 py-4 rounded-2xl text-[11px] font-bold border transition-all duration-300 truncate text-center flex flex-col items-center gap-1 ${
+                      state.selectedStar?.id === star.id 
+                      ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg scale-105' 
+                      : 'bg-slate-950/40 border-slate-800/60 text-slate-500 hover:border-slate-500 hover:text-slate-200 hover:bg-slate-800/40'
+                    }`}
+                  >
+                    {star.name[state.language]}
+                  </button>
+                ))}
+              </div>
+              <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-slate-900 pointer-events-none"></div>
             </div>
-            
-            <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-slate-900 pointer-events-none"></div>
           </div>
         )}
+
+        {/* 导航栏主体 */}
+        <div className="h-28 bg-slate-900/95 backdrop-blur-3xl border-t border-slate-800/50 flex justify-center items-center shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
+          <div className="max-w-xl w-full flex justify-around items-center px-4">
+            {[
+              { id: StarCategory.GRADE_A, label: '甲' },
+              { id: StarCategory.GRADE_B, label: '乙' },
+              { id: StarCategory.GRADE_C, label: '丙' },
+              { id: StarCategory.GRADE_D, label: '丁' },
+              { id: StarCategory.GRADE_E, label: '戊' }
+            ].map((grade) => (
+              <button
+                key={grade.id}
+                onClick={() => {
+                  if (activeTab === grade.id && isStarSelectorOpen) {
+                    setIsStarSelectorOpen(false);
+                  } else {
+                    setActiveTab(grade.id);
+                    setIsStarSelectorOpen(true);
+                  }
+                }}
+                className={`flex flex-col items-center gap-2 group transition-all duration-300 ${activeTab === grade.id ? 'scale-110' : 'opacity-40 hover:opacity-100'}`}
+              >
+                <div className={`w-14 h-14 rounded-full flex items-center justify-center text-xl font-black border-2 transition-all duration-500 ${
+                  activeTab === grade.id 
+                  ? 'bg-gradient-to-br from-indigo-500 to-purple-600 border-indigo-300 text-white shadow-[0_0_30px_rgba(79,70,229,0.6)]' 
+                  : 'bg-slate-950 border-slate-800 text-slate-500'
+                }`}>
+                  {grade.label}
+                </div>
+                <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${activeTab === grade.id ? 'text-indigo-400' : 'text-slate-600'}`}>
+                  {grade.id.split('_')[1]}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
       </nav>
 
       <footer className="mt-32 text-[9px] text-slate-900 font-bold tracking-[0.8em] uppercase mb-16 flex flex-col items-center gap-6">
